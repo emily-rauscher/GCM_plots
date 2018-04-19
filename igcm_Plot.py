@@ -27,7 +27,7 @@ def ortholine(R,lonl,latl,loncenter,latcenter):
     return x,y
 
 def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units_t,units_w,
-              savefig,savename,ortho,ver,cbarL,cbarM,cbar_even,ncolors):
+              savefig,savename,ortho,ver,cbarL,cbarM,cbar_even,ncolors,vfrac):
     lon_arr=lons
     lat_arr=lats
     nlon=len(lon_arr)
@@ -43,7 +43,7 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
     #      4=v wind
     #      5=temps
     
-    if plot==0: #TEMPERATYRE
+    if plot==0: #TEMPERATURE
         ind=5 
         
         colors1 = plt.cm.YlGnBu_r(np.linspace(0, 1, 128))
@@ -59,8 +59,19 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         
         colors1 = plt.cm.Purples_r(np.linspace(0, 1, 128))
         colors2 = plt.cm.Oranges(np.linspace(0., 1, 128))
+        
     
+    if plot==3:  #PLOTTING STREAM LINES with faded temps behind
+        ind=5  #(want contours to be temp)
+        colors1 = plt.cm.YlGnBu_r(np.linspace(0, 1, 128))
+        colors2 = plt.cm.YlOrBr(np.linspace(0., 1, 128))
+    
+        data_26_u=np.copy(data[lev,:,:,3])
+        data_26_v=np.copy(data[lev,:,:,4])
+        #data_26_W=(np.sqrt(np.square(data_26_u)+np.square(data_26_v)))
+        
     data_26=np.copy(data[lev,:,:,ind])
+       
     #######################################
 
     # combine them and build a new colormap
@@ -76,7 +87,7 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         lat_arr=lat_arr
         lon_arr=lon_arr
     
-    if plot==0: #TEMPERATURE, convert units    
+    if plot==0 or plot==3: #TEMPERATURE, convert units    
         if units_t==1:
             data_26-=273.15
         if units_t==2:
@@ -97,7 +108,7 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
             maxV=lim
     
     if cbarL>0 and cbarM>0:
-        if plot==0:
+        if plot==0 or plot==3:
             if units_t==1:
                 cbarL-=273.15
                 cbarM-=273.15
@@ -171,15 +182,37 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
                 CENTER[i-nlon/2,:]=data_26[i,:]
         plt_data=CENTER
         plt_lon=np.linspace(-180,180,nlon)
+        
+        if plot==3:
+            CENTER_U=np.zeros([nlon,nlat])
+            CENTER_V=np.zeros([nlon,nlat])
+            for i in range(0,len(lon_arr)):
+                if i<nlon/2:
+                    CENTER_U[i+nlon/2,:]=data_26_u[i,:]
+                    CENTER_V[i+nlon/2,:]=data_26_v[i,:]
+                if i>=nlon/2:
+                    CENTER_U[i-nlon/2,:]=data_26_u[i,:]
+                    CENTER_V[i-nlon/2,:]=data_26_v[i,:]
+            plt_U0=CENTER_U
+            plt_V0=CENTER_V
       
 
         LON,LAT=np.meshgrid(plt_lon,lat_arr)
         
-        p=plt.contourf(LON,LAT,plt_data.T,levels=cbar_levs,cmap=mymap,zorder=0)
+        if plot==3:
+            a=0.3
+        else:
+            a=1.0
+        p=plt.contourf(LON,LAT,plt_data.T,levels=cbar_levs,cmap=mymap,zorder=0,alpha=a)
         c=plt.colorbar(p)
         c.ax.tick_params(labelsize=18) 
 
         plt.grid(color='white',linewidth=0.5,linestyle='--',alpha=0.5, zorder=10)
+        
+        if plot==3:
+            data_26_W=(np.sqrt(np.square(plt_U0)+np.square(plt_V0)))
+            lw=5.*data_26_W/np.nanmax(data_26_W)
+            plt.streamplot(LON,LAT,plt_U0.T,plt_V0.T,density=vfrac,color=data_26_W.T,cmap=matplotlib.cm.bone_r,linewidth=lw.T)
         
         if plot==0:
             if units_t==0:
@@ -259,14 +292,44 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
                 if j>=nlon and i>=nlat:
                     plt_data0[i,j]=(data_26.T)[nlat+ol-i,nlon+ol-j] 
         plt_data0[:nlat,:nlon]=(data_26.T)
+        
+        if plot==3:
+            plt_U0=np.zeros_like(X)
+            plt_V0=np.zeros_like(X)
+            for i in range(0,X.shape[0]):
+                for j in range(0,X.shape[1]):
+                    if i>=nlat and j<nlon:
+                        plt_U0[i,j]=(data_26_u.T)[nlat+ol-i,j]
+                        plt_V0[i,j]=(data_26_v.T)[nlat+ol-i,j]
+                    if j>=nlon and i <nlat:
+                        plt_U0[i,j]=(data_26_u.T)[i,nlon+ol-j] 
+                        plt_V0[i,j]=(data_26_v.T)[i,nlon+ol-j]
+                    if j>=nlon and i>=nlat:
+                        plt_U0[i,j]=(data_26_u.T)[nlat+ol-i,nlon+ol-j] 
+                        plt_V0[i,j]=(data_26_v.T)[nlat+ol-i,nlon+ol-j]
+            plt_U0[:nlat,:nlon]=(data_26_u.T)
+            plt_V0[:nlat,:nlon]=(data_26_v.T)
+            
 
         fig=plt.figure(figsize=(11,8))
         ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
         ax.axis('off')
         
-        p=plt.contourf(X,Y,plt_data0*MASK,levels=cbar_levs,cmap=mymap,zorder=0)
+        if plot==3:
+            a=0.3
+        else:
+            a=1.0
+        p=plt.contourf(X,Y,plt_data0*MASK,levels=cbar_levs,cmap=mymap,zorder=0,alpha=a)
         c=plt.colorbar(p)
         c.ax.tick_params(labelsize=18) 
+        
+        if plot==3:
+            data_26_W=(np.sqrt(np.square(plt_U0)+np.square(plt_V0)))
+            lw=5.*data_26_W/np.nanmax(data_26_W)
+            print X.shape, Y.shape
+            print plt_U0.shape, plt_V0.shape
+            print data_26_W.shape, lw.shape
+            plt.streamplot(X,Y,plt_U0,plt_V0,density=vfrac,color=data_26_W,cmap=matplotlib.cm.bone_r,linewidth=lw)
         
         #lat lines
         x,y=ortholine(R,lon_arr,0*np.pi/180.,loncenter,latcenter)
