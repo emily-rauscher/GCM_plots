@@ -1,6 +1,8 @@
 import numpy as np
 import math
 
+from scipy.interpolate import griddata
+
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
@@ -65,6 +67,9 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         ind=5  #(want contours to be temp)
         colors1 = plt.cm.YlGnBu_r(np.linspace(0, 1, 128))
         colors2 = plt.cm.YlOrBr(np.linspace(0., 1, 128))
+        
+        greys=plt.cm.gray(np.linspace(0., 0.75, 128))
+        mygreys=mcolors.LinearSegmentedColormap.from_list('my_colormap', greys)
     
         data_26_u=np.copy(data[lev,:,:,3])
         data_26_v=np.copy(data[lev,:,:,4])
@@ -212,7 +217,7 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         if plot==3:
             data_26_W=(np.sqrt(np.square(plt_U0)+np.square(plt_V0)))
             lw=5.*data_26_W/np.nanmax(data_26_W)
-            plt.streamplot(LON,LAT,plt_U0.T,plt_V0.T,density=vfrac,color=data_26_W.T,cmap=matplotlib.cm.bone_r,linewidth=lw.T)
+            plt.streamplot(LON,LAT,plt_U0.T,plt_V0.T,density=vfrac,color=data_26_W.T,cmap=mygreys,linewidth=lw.T)
         
         if plot==0:
             if units_t==0:
@@ -324,12 +329,32 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         c.ax.tick_params(labelsize=18) 
         
         if plot==3:
-            data_26_W=(np.sqrt(np.square(plt_U0)+np.square(plt_V0)))
+            # have to intperolate onto grid
+            #coords=np.ones([X.shape[0]*X.shape[1],2])
+            #coords[:,0]=X.flatten()
+            #coords[:,1]=Y.flatten()
+            U0_DATA_flat=plt_U0.flatten()
+            V0_DATA_flat=plt_V0.flatten()
+            
+            #new_size=150
+            new_x=np.linspace(np.nanmin(X),np.nanmax(X),2.*X.shape[0])
+            new_y=np.linspace(np.nanmin(Y),np.nanmax(Y),2.*Y.shape[1])
+            X1,Y1=np.meshgrid(new_x,new_y)
+            
+            #new_coords=np.ones([X1.shape[0]*X1.shape[1],2])
+            #new_coords[:,0]=X1.flatten()
+            #new_coords[:,1]=Y1.flatten()
+           
+            interp_U0=griddata((X.flatten(),Y.flatten()),U0_DATA_flat,(X1.flatten(),Y1.flatten()),fill_value='nan')
+            interp_V0=griddata((X.flatten(),Y.flatten()),V0_DATA_flat,(X1.flatten(),Y1.flatten()),fill_value='nan')
+
+            plt_U0_int=interp_U0.reshape(X1.shape)
+            plt_V0_int=interp_V0.reshape(X1.shape)
+            
+            data_26_W=(np.sqrt(np.square(plt_U0_int)+np.square(plt_V0_int)))
             lw=5.*data_26_W/np.nanmax(data_26_W)
-            print X.shape, Y.shape
-            print plt_U0.shape, plt_V0.shape
-            print data_26_W.shape, lw.shape
-            plt.streamplot(X,Y,plt_U0,plt_V0,density=vfrac,color=data_26_W,cmap=matplotlib.cm.bone_r,linewidth=lw)
+            
+            plt.streamplot(X1,Y1,plt_U0_int,plt_V0_int,density=vfrac,color=data_26_W,cmap=mygreys,linewidth=lw)
         
         #lat lines
         x,y=ortholine(R,lon_arr,0*np.pi/180.,loncenter,latcenter)
@@ -371,7 +396,7 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         
         
         #colorbar label
-        if plot==0:
+        if plot==0 or plot==3:
             if units_t==0:
                 plt.figtext(0.8,0.5,'Temperature [K]',fontsize=20,rotation='vertical',ha='center',va='center')
             if units_t==1:
