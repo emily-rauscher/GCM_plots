@@ -68,7 +68,7 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         colors1 = plt.cm.YlGnBu_r(np.linspace(0, 1, 128))
         colors2 = plt.cm.YlOrBr(np.linspace(0., 1, 128))
         
-        greys=plt.cm.gray(np.linspace(0., 0.75, 128))
+        greys=plt.cm.gray_r(np.linspace(0., 0.75, 128))
         mygreys=mcolors.LinearSegmentedColormap.from_list('my_colormap', greys)
     
         data_26_u=np.copy(data[lev,:,:,3])
@@ -205,7 +205,8 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         LON,LAT=np.meshgrid(plt_lon,lat_arr)
         
         if plot==3:
-            a=0.3
+            #a=0.3
+            a=0.7
         else:
             a=1.0
         p=plt.contourf(LON,LAT,plt_data.T,levels=cbar_levs,cmap=mymap,zorder=0,alpha=a)
@@ -217,9 +218,9 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         if plot==3:
             data_26_W=(np.sqrt(np.square(plt_U0)+np.square(plt_V0)))
             lw=5.*data_26_W/np.nanmax(data_26_W)
-            plt.streamplot(LON,LAT,plt_U0.T,plt_V0.T,density=vfrac,color=data_26_W.T,cmap=mygreys,linewidth=lw.T)
+            plt.streamplot(LON,LAT,plt_U0.T,plt_V0.T,density=vfrac,color='black',cmap=mygreys,linewidth=lw.T)
         
-        if plot==0:
+        if plot==0 or plot==3:
             if units_t==0:
                 plt.figtext(0.84,0.5,'Temperature [K]',fontsize=20,rotation='vertical',ha='center',va='center')
             if units_t==1:
