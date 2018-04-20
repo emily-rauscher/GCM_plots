@@ -172,7 +172,9 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
                 print 'Min VWind [mph], Plot limit: ', np.nanmin(data_26), minV
                 print 'Max VWind [mph], Plot limit: ', np.nanmax(data_26), maxV
             print '-------------------------------------------------------'
-    
+    ###################################
+    # CYLINDRICAL PROJECTION PLOTTING #
+    ###################################
     if ortho==False:
     
         plt.figure(figsize=(10,6.25))
@@ -206,7 +208,7 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         
         if plot==3:
             #a=0.3
-            a=0.7
+            a=0.7 #add a transparency for temps behind streamplot overlay
         else:
             a=1.0
         p=plt.contourf(LON,LAT,plt_data.T,levels=cbar_levs,cmap=mymap,zorder=0,alpha=a)
@@ -218,7 +220,7 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         if plot==3:
             data_26_W=(np.sqrt(np.square(plt_U0)+np.square(plt_V0)))
             lw=5.*data_26_W/np.nanmax(data_26_W)
-            plt.streamplot(LON,LAT,plt_U0.T,plt_V0.T,density=vfrac,color='black',cmap=mygreys,linewidth=lw.T)
+            plt.streamplot(LON,LAT,plt_U0.T,plt_V0.T,density=vfrac,color='black',linewidth=lw.T)
         
         if plot==0 or plot==3:
             if units_t==0:
@@ -259,38 +261,27 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         
         plt.close()
         return
-        
+    
+    ####################################
+    # ORTHOGRAPHIC PROJECTION PLOTTING #
+    ####################################
     elif ortho==True:
         ol=1 
         R=1.0
-        if units_a==1:  #convert to rads for ortho projection
+        if units_a==1:  #convert to rads for ortho projection (needed to go to x/y)
             lat_arr=lat_arr*(np.pi/180.)
             lon_arr=lon_arr*(np.pi/180.)
             
         latcenter=latcenter*np.pi/180.
         loncenter=loncenter*np.pi/180.
             
-        lon_arr=np.append(lon_arr,lon_arr[:ol])
-        #lat_arr=np.append(lat_arr,lat_arr[:ol])
+        lon_arr=np.append(lon_arr,lon_arr[:ol]) #extend longitudes to overlap 
         LON,LAT=np.meshgrid(lon_arr,lat_arr)
-
-        X=np.zeros_like(LON)
-        Y=np.zeros_like(LAT)
-
-        MASK=np.ones_like(X)
         
-
-        for i in range(0,X.shape[0]):
-            for j in range(0,X.shape[1]):
-                X[i,j]=R*np.cos(LAT[i,j])*np.sin(LON[i,j]-loncenter)
-                Y[i,j]=R*(np.cos(latcenter)*np.sin(LAT[i,j])-np.sin(latcenter)*np.cos(LAT[i,j])*np.cos(LON[i,j]-loncenter))
-                cosc=np.sin(latcenter)*np.sin(LAT[i,j])+np.cos(latcenter)*np.cos(LAT[i,j])*np.cos(LON[i,j]-loncenter)
-                if cosc<0:
-                    MASK[i,j]=np.nan
-
-        plt_data0=np.zeros_like(X)
-        for i in range(0,X.shape[0]):
-            for j in range(0,X.shape[1]):
+        # Extends plot data to overlap in lon space 
+        plt_data0=np.zeros_like(LON)
+        for i in range(0,LON.shape[0]):
+            for j in range(0,LON.shape[1]):
                 if i>=nlat and j<nlon:
                     plt_data0[i,j]=(data_26.T)[nlat+ol-i,j]
                 if j>=nlon and i <nlat:
@@ -299,11 +290,11 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
                     plt_data0[i,j]=(data_26.T)[nlat+ol-i,nlon+ol-j] 
         plt_data0[:nlat,:nlon]=(data_26.T)
         
-        if plot==3:
-            plt_U0=np.zeros_like(X)
-            plt_V0=np.zeros_like(X)
-            for i in range(0,X.shape[0]):
-                for j in range(0,X.shape[1]):
+        if plot==3:  #if plotting streamplot, overlap U and V
+            plt_U0=np.zeros_like(LON)
+            plt_V0=np.zeros_like(LON)
+            for i in range(0,LON.shape[0]):
+                for j in range(0,LON.shape[1]):
                     if i>=nlat and j<nlon:
                         plt_U0[i,j]=(data_26_u.T)[nlat+ol-i,j]
                         plt_V0[i,j]=(data_26_v.T)[nlat+ol-i,j]
@@ -315,14 +306,27 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
                         plt_V0[i,j]=(data_26_v.T)[nlat+ol-i,nlon+ol-j]
             plt_U0[:nlat,:nlon]=(data_26_u.T)
             plt_V0[:nlat,:nlon]=(data_26_v.T)
-            
 
+        #X=np.zeros_like(LON) # X and Y dummy arrays
+        #Y=np.zeros_like(LAT)
+
+        MASK=np.ones_like(LON) # to mask points on unseen hemisphere
+        
+        X=R*np.cos(LAT)*np.sin(LON-loncenter)
+        Y=R*(np.cos(latcenter)*np.sin(LAT)-np.sin(latcenter)*np.cos(LAT)*np.cos(LON-loncenter))
+        cosc=np.sin(latcenter)*np.sin(LAT)+np.cos(latcenter)*np.cos(LAT)*np.cos(LON-loncenter)
+        
+        for i in range(0,X.shape[0]):  #checks for unseen hemisphere
+            for j in range(0,X.shape[1]):
+                if cosc[i,j]<0:
+                    MASK[i,j]=np.nan
+  
         fig=plt.figure(figsize=(11,8))
         ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
         ax.axis('off')
         
         if plot==3:
-            a=0.3
+            a=0.7  #add a transparency to the temps for streamplot overlay
         else:
             a=1.0
         p=plt.contourf(X,Y,plt_data0*MASK,levels=cbar_levs,cmap=mymap,zorder=0,alpha=a)
@@ -330,24 +334,34 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         c.ax.tick_params(labelsize=18) 
         
         if plot==3:
-            # have to intperolate onto grid
-            #coords=np.ones([X.shape[0]*X.shape[1],2])
-            #coords[:,0]=X.flatten()
-            #coords[:,1]=Y.flatten()
-            U0_DATA_flat=plt_U0.flatten()
-            V0_DATA_flat=plt_V0.flatten()
+            # have to intperolate onto grid, need to flatten first
+            U0_DATA_flat=(plt_U0*MASK).flatten()
+            V0_DATA_flat=(plt_V0*MASK).flatten()
+            #temp_flat=(plt_data0*MASK).flatten()
             
-            #new_size=150
-            new_x=np.linspace(np.nanmin(X),np.nanmax(X),2.*X.shape[0])
-            new_y=np.linspace(np.nanmin(Y),np.nanmax(Y),2.*Y.shape[1])
+            X_nonan_U=(X.flatten())[~np.isnan(U0_DATA_flat)]
+            Y_nonan_U=(Y.flatten())[~np.isnan(U0_DATA_flat)]
+            u_nonan=(U0_DATA_flat)[~np.isnan(U0_DATA_flat)]
+            
+            X_nonan_V=(X.flatten())[~np.isnan(V0_DATA_flat)]
+            Y_nonan_V=(Y.flatten())[~np.isnan(V0_DATA_flat)]
+            v_nonan=(V0_DATA_flat)[~np.isnan(V0_DATA_flat)]
+            
+            
+            new_x=np.linspace(np.nanmin(X),np.nanmax(X),X.shape[0])
+            new_y=np.linspace(np.nanmin(Y),np.nanmax(Y),Y.shape[1])
             X1,Y1=np.meshgrid(new_x,new_y)
+            mask1=np.ones_like(X1)
+            for i in range(0,X1.shape[0]):
+                for j in range(0,X1.shape[1]):
+                    r=np.sqrt(X1[i,j]*X1[i,j]+Y1[i,j]*Y1[i,j])
+                    if r>1:
+                        mask1[i,j]=np.nan
             
-            #new_coords=np.ones([X1.shape[0]*X1.shape[1],2])
-            #new_coords[:,0]=X1.flatten()
-            #new_coords[:,1]=Y1.flatten()
-           
-            interp_U0=griddata((X.flatten(),Y.flatten()),U0_DATA_flat,(X1.flatten(),Y1.flatten()),fill_value='nan')
-            interp_V0=griddata((X.flatten(),Y.flatten()),V0_DATA_flat,(X1.flatten(),Y1.flatten()),fill_value='nan')
+            interp_U0=griddata((X_nonan_U,Y_nonan_U),u_nonan,(X1.flatten(),Y1.flatten()),
+                               fill_value='nan')
+            interp_V0=griddata((X_nonan_V,Y_nonan_V),v_nonan,(X1.flatten(),Y1.flatten()),
+                               fill_value='nan')
 
             plt_U0_int=interp_U0.reshape(X1.shape)
             plt_V0_int=interp_V0.reshape(X1.shape)
@@ -355,9 +369,10 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
             data_26_W=(np.sqrt(np.square(plt_U0_int)+np.square(plt_V0_int)))
             lw=5.*data_26_W/np.nanmax(data_26_W)
             
-            plt.streamplot(X1,Y1,plt_U0_int,plt_V0_int,density=vfrac,color=data_26_W,cmap=mygreys,linewidth=lw)
+            plt.streamplot(X1,Y1,plt_U0_int,plt_V0_int,density=vfrac,color='black',linewidth=lw)
+            #plt.contour(X1,Y1,plt_t0_int,levels=cbar_levs,colors='black')
         
-        #lat lines
+        #lat lines for orthoprojection
         x,y=ortholine(R,lon_arr,0*np.pi/180.,loncenter,latcenter)
         plt.plot(x,y,linewidth=0.5,linestyle='--',color='white',alpha=0.7,zorder=10)
         
@@ -421,7 +436,6 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
 
         #plt.yticks(fontsize=18,fontproperties=font)
         #plt.xticks(fontsize=18,fontproperties=font)
-
       
         if savefig==True:
             plt.savefig(savename,rasterized=True)
@@ -429,5 +443,15 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
             plt.show()
         
         plt.close()
+        
+        #plt.figure(2)
+        #plt.scatter(X,Y,c=plt_U0*MASK)
+        #plt.figure(3)
+        #plt.scatter(X1,Y1,c=plt_U0_int*mask1)
+        
+        #plt.figure(4)
+        #plt.scatter(X,Y,c=plt_V0*MASK)
+        #plt.figure(5)
+        #plt.scatter(X1,Y1,c=plt_V0_int*mask1)
         
         return
