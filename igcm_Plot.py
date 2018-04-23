@@ -29,7 +29,7 @@ def ortholine(R,lonl,latl,loncenter,latcenter):
     return x,y
 
 def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units_t,units_w,
-              savefig,savename,ortho,ver,cbarL,cbarM,cbar_even,ncolors,vfrac):
+              savefig,savename,ortho,ver,cbarL,cbarM,cbar_even,ncolors,vfrac,lo):
     lon_arr=lons
     lat_arr=lats
     nlon=len(lon_arr)
@@ -45,36 +45,59 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
     #      4=v wind
     #      5=temps
     
+    #lo index:
+    # 0 =temp
+    # 1 = u wind
+    # 2 = v wind
+    
+    
+    
     if plot==0: #TEMPERATURE
-        ind=5 
+        if lo==True:
+            ind=0
+        else:
+            ind=5 
         
         colors1 = plt.cm.YlGnBu_r(np.linspace(0, 1, 128))
         colors2 = plt.cm.YlOrBr(np.linspace(0., 1, 128))
         
     if plot==1:
-        ind=3 # uwind
+        if lo==True:
+            ind=1
+        else:
+            ind=3 # uwind
         
         colors1 = plt.cm.BuGn_r(np.linspace(0, 1, 128))
         colors2 = plt.cm.RdPu(np.linspace(0., 1, 128))
     if plot==2:
-        ind=4 # vwind
+        if lo==True:
+            ind=2
+        else:
+            ind=4 # vwind
         
         colors1 = plt.cm.Purples_r(np.linspace(0, 1, 128))
         colors2 = plt.cm.Oranges(np.linspace(0., 1, 128))
         
     
     if plot==3:  #PLOTTING STREAM LINES with faded temps behind
-        ind=5  #(want contours to be temp)
+        if lo==True:
+            ind=0
+        else:
+            ind=5  #(want contours to be temp)
         colors1 = plt.cm.YlGnBu_r(np.linspace(0, 1, 128))
         colors2 = plt.cm.YlOrBr(np.linspace(0., 1, 128))
         
         greys=plt.cm.gray_r(np.linspace(0., 0.75, 128))
         mygreys=mcolors.LinearSegmentedColormap.from_list('my_colormap', greys)
-    
-        data_26_u=np.copy(data[lev,:,:,3])
-        data_26_v=np.copy(data[lev,:,:,4])
-        #data_26_W=(np.sqrt(np.square(data_26_u)+np.square(data_26_v)))
+        if lo==True:
+            data_26_u=np.copy(data[lev,:,:,1])
+            data_26_v=np.copy(data[lev,:,:,2])
+        else:
+            data_26_u=np.copy(data[lev,:,:,3])
+            data_26_v=np.copy(data[lev,:,:,4])
         
+        #data_26_W=(np.sqrt(np.square(data_26_u)+np.square(data_26_v)))
+    
     data_26=np.copy(data[lev,:,:,ind])
        
     #######################################
@@ -127,8 +150,8 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
             if units_w==2:
                 cbarL=(cbarL/1609.34)*3600.  #m/s to mph
                 cbarM=(cbarM/1609.34)*3600.  #m/s to mph
-        minV=cbarL
-        maxV=cbarM
+        minV=np.int((np.nanmin(cbarL)))*1.0
+        maxV=np.ceil(np.nanmax(cbarM))
     
     if ncolors==0:
         cbar_levs=np.linspace(minV-ex,maxV+ex,(maxV-minV+2*ex)+1)
@@ -321,7 +344,15 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
                 if cosc[i,j]<0:
                     MASK[i,j]=np.nan
   
-        fig=plt.figure(figsize=(11,8))
+        if plot==3:
+            plt.figure(3)
+            plt.contourf(LON,LAT,plt_U0)
+            plt.show()
+        plt.figure(4)
+        plt.contourf(LON,LAT,plt_data0)
+        plt.show()
+            
+        fig=plt.figure(1,figsize=(11,8))
         ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
         ax.axis('off')
         
@@ -335,6 +366,7 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         
         if plot==3:
             # have to intperolate onto grid, need to flatten first
+            
             U0_DATA_flat=(plt_U0*MASK).flatten()
             V0_DATA_flat=(plt_V0*MASK).flatten()
             #temp_flat=(plt_data0*MASK).flatten()
@@ -351,6 +383,25 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
             new_x=np.linspace(np.nanmin(X),np.nanmax(X),X.shape[0])
             new_y=np.linspace(np.nanmin(Y),np.nanmax(Y),Y.shape[1])
             X1,Y1=np.meshgrid(new_x,new_y)
+            # send this to lat lon for interpolation (otherwise ignores back hemisphere)
+            rho=np.sqrt(X1*X1 +Y1*Y1)
+            c=np.arcsin(rho/R)
+            new_lat=np.arcsin(np.cos(c)*np.sin(latcenter)+Y1*np.sin(c)*np.cos(latcenter)/rho)
+            new_lon=loncenter+np.arctan2((X1*np.sin(c)),(rho*np.cos(c)*np.cos(latcenter)-Y1*np.sin(c)*np.sin(latcenter)))
+            
+            interp_U0_cy=griddata((LON.flatten(),LAT.flatten()),plt_U0.flatten(),(new_lon.flatten(),new_lat.flatten()),
+                                  fill_value='nan')
+            interp_V0_cy=griddata((LON.flatten(),LAT.flatten()),plt_V0.flatten(),(new_lon.flatten(),new_lat.flatten()),
+                                  fill_value='nan')
+            
+            cosc_new=np.sin(latcenter)*np.sin(new_lat)+np.cos(latcenter)*np.cos(new_lat)*np.cos(new_lon-latcenter)
+            mask_new=np.ones_like(X1)
+            for i in range(0,X1.shape[0]):
+                for j in range(0,X1.shape[1]):
+                    if cosc_new[i,j]<0.0:
+                        mask_new[i,j]=np.nan
+            ##############################################
+            
             mask1=np.ones_like(X1)
             for i in range(0,X1.shape[0]):
                 for j in range(0,X1.shape[1]):
@@ -358,13 +409,16 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
                     if r>1:
                         mask1[i,j]=np.nan
             
-            interp_U0=griddata((X_nonan_U,Y_nonan_U),u_nonan,(X1.flatten(),Y1.flatten()),
-                               fill_value='nan')
-            interp_V0=griddata((X_nonan_V,Y_nonan_V),v_nonan,(X1.flatten(),Y1.flatten()),
-                               fill_value='nan')
+            #interp_U0=griddata((X_nonan_U,Y_nonan_U),u_nonan,(X1.flatten(),Y1.flatten()),
+            #                   fill_value='nan')
+            #interp_V0=griddata((X_nonan_V,Y_nonan_V),v_nonan,(X1.flatten(),Y1.flatten()),
+            #                   fill_value='nan')
 
-            plt_U0_int=interp_U0.reshape(X1.shape)
-            plt_V0_int=interp_V0.reshape(X1.shape)
+            #plt_U0_int=interp_U0.reshape(X1.shape)
+            #plt_V0_int=interp_V0.reshape(X1.shape)
+            
+            plt_U0_int=interp_U0_cy.reshape(X1.shape)
+            plt_V0_int=interp_V0_cy.reshape(X1.shape)
             
             data_26_W=(np.sqrt(np.square(plt_U0_int)+np.square(plt_V0_int)))
             lw=5.*data_26_W/np.nanmax(data_26_W)
@@ -444,6 +498,11 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         
         plt.close()
         
+        if plot==3:
+            plt.figure(2)
+            plt.contourf(new_lon,new_lat,plt_U0_int)
+            plt.show()
+            
         #plt.figure(2)
         #plt.scatter(X,Y,c=plt_U0*MASK)
         #plt.figure(3)
