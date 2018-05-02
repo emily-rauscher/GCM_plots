@@ -28,7 +28,7 @@ def ortholine(R,lonl,latl,loncenter,latcenter):
             y[i]=np.nan
     return x,y
 
-def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units_t,units_w,
+def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units_t,units_w,freeze,
               savefig,savename,ortho,ver,cbarL,cbarM,cbar_even,ncolors,vfrac,lo):
     lon_arr=lons
     lat_arr=lats
@@ -115,11 +115,14 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         lat_arr=lat_arr
         lon_arr=lon_arr
     
+    freezeT=273.15
     if plot==0 or plot==3: #TEMPERATURE, convert units    
         if units_t==1:
             data_26-=273.15
+            freezeT=0.0
         if units_t==2:
             data_26=(9./5.)*(data_26-273.15)+32.
+            freezeT=32.0
     if plot==1 or plot==2: #WINDS, convert units
         if units_w==1:
             data_26/=1000.  #m/s to km/s
@@ -135,7 +138,7 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
             minV=-1.0*lim
             maxV=lim
     
-    if cbarL>0 and cbarM>0:
+    if cbarL!=0 and cbarM!=0:
         if plot==0 or plot==3:
             if units_t==1:
                 cbarL-=273.15
@@ -236,14 +239,16 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
             a=1.0
         p=plt.contourf(LON,LAT,plt_data.T,levels=cbar_levs,cmap=mymap,zorder=0,alpha=a)
         c=plt.colorbar(p)
-        c.ax.tick_params(labelsize=18) 
+        c.ax.tick_params(labelsize=18)
+        if freeze==True:
+            plt.contour(LON,LAT,plt_data.T,levels=[freezeT],colors='black',zorder=1)
 
         plt.grid(color='white',linewidth=0.5,linestyle='--',alpha=0.5, zorder=10)
         
         if plot==3:
             data_26_W=(np.sqrt(np.square(plt_U0)+np.square(plt_V0)))
             lw=5.*data_26_W/np.nanmax(data_26_W)
-            plt.streamplot(LON,LAT,plt_U0.T,plt_V0.T,density=vfrac,color='black',linewidth=lw.T)
+            plt.streamplot(LON,LAT,plt_U0.T,plt_V0.T,density=vfrac,color='black',linewidth=lw.T,zorder=10)
         
         if plot==0 or plot==3:
             if units_t==0:
@@ -269,6 +274,9 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
 
         plt.yticks(fontsize=18,fontproperties=font)
         plt.xticks(fontsize=18,fontproperties=font)
+        
+        plt.ylim(np.nanmin(lat_arr),np.nanmax(lat_arr))
+        plt.xlim(np.nanmin(plt_lon),np.nanmax(plt_lon))
 
         if units_a==1:
             plt.ylabel('Latitude [${\circ}$]',fontsize=20)
@@ -344,13 +352,13 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
                 if cosc[i,j]<0:
                     MASK[i,j]=np.nan
   
-        if plot==3:
-            plt.figure(3)
-            plt.contourf(LON,LAT,plt_U0)
-            plt.show()
-        plt.figure(4)
-        plt.contourf(LON,LAT,plt_data0)
-        plt.show()
+        #if plot==3:
+        #    plt.figure(3)
+        #    plt.contourf(LON,LAT,plt_U0)
+        #    plt.show()
+        #plt.figure(4)
+        #plt.contourf(LON,LAT,plt_data0)
+        #plt.show()
             
         fig=plt.figure(1,figsize=(11,8))
         ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
@@ -363,6 +371,9 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         p=plt.contourf(X,Y,plt_data0*MASK,levels=cbar_levs,cmap=mymap,zorder=0,alpha=a)
         c=plt.colorbar(p)
         c.ax.tick_params(labelsize=18) 
+        
+        if freeze==True:
+            plt.contour(LON,LAT,plt_data.T,levels=freeze,colors='black',zorder=1)
         
         if plot==3:
             # have to intperolate onto grid, need to flatten first
@@ -423,7 +434,7 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
             data_26_W=(np.sqrt(np.square(plt_U0_int)+np.square(plt_V0_int)))
             lw=5.*data_26_W/np.nanmax(data_26_W)
             
-            plt.streamplot(X1,Y1,plt_U0_int,plt_V0_int,density=vfrac,color='black',linewidth=lw)
+            plt.streamplot(X1,Y1,plt_U0_int,plt_V0_int,density=vfrac,color='black',linewidth=lw,zorder=10)
             #plt.contour(X1,Y1,plt_t0_int,levels=cbar_levs,colors='black')
         
         #lat lines for orthoprojection
@@ -465,6 +476,8 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         plt.plot(x,y,linewidth=0.5,linestyle='--',color='white',alpha=0.7,zorder=10)
         
         
+       
+        
         #colorbar label
         if plot==0 or plot==3:
             if units_t==0:
@@ -498,10 +511,10 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         
         plt.close()
         
-        if plot==3:
-            plt.figure(2)
-            plt.contourf(new_lon,new_lat,plt_U0_int)
-            plt.show()
+        #if plot==3:
+        #    plt.figure(2)
+        #    plt.contourf(new_lon,new_lat,plt_U0_int)
+        #    plt.show()
             
         #plt.figure(2)
         #plt.scatter(X,Y,c=plt_U0*MASK)
