@@ -3,7 +3,7 @@ import math
 
 from scipy.io import readsav
 
-def load_data(path):
+def load_data(path,LO):
     filename=raw_input('Run Name?:')
     oom=input('Pressure OOM?:')
     surfp=input('Surface Press [bar]:')
@@ -13,7 +13,10 @@ def load_data(path):
     data_26=readsav(path+filename+'/atm_wind_temp.sav')['xy']
     nlev,nlon,nlat,nparam=data_26.shape
     
-    data_lo=readsav(path+filename+'/finalorb.sav')['all_dat']
+    if LO==True:
+        data_lo=readsav(path+filename+'/finalorb.sav')['all_dat']
+    else:
+        data_lo=np.empty(data_26.shape)
 
     print ' '
     print '--------------------------'
