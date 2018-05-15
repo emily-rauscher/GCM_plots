@@ -3,7 +3,7 @@ import math
 
 from scipy.io import readsav
 
-def load_data(path,LO):
+def load_data(path,LO,ver):
     filename=raw_input('Run Name?:')
     oom=input('Pressure OOM?:')
     surfp=input('Surface Press [bar]:')
@@ -18,14 +18,15 @@ def load_data(path,LO):
     else:
         data_lo=np.empty(data_26.shape)
 
-    print ' '
-    print '--------------------------'
-    print '|    ARRAY DIMENSIONS    |'
-    print '--------------------------'
-    print 'N_levels: ', nlev
-    print 'N_lons:   ', nlon
-    print 'N_lats:   ', nlat
-    print 'N_params: ', nparam
+    if ver==True:
+        print ' '
+        print '--------------------------'
+        print '|    ARRAY DIMENSIONS    |'
+        print '--------------------------'
+        print 'N_levels: ', nlev
+        print 'N_lons:   ', nlon
+        print 'N_lats:   ', nlat
+        print 'N_params: ', nparam
 
     # nparam index: 
     #      0=lons
@@ -48,18 +49,20 @@ def load_data(path,LO):
             sigma[n]=sigma[n+1]*10.**(stp)
 
     p_BAR=sigma*surfp
-    print ' '
-    print 'PRESSURE ARRAY: '
-    print p_BAR  
+    if ver==True:
+        print ' '
+        print 'PRESSURE ARRAY: '
+        print p_BAR  
 
     lat_arr=data_26[0,0,:,1]
     lon_arr=data_26[0,:,0,0]
 
-    print ' '
-    print 'LATITUDE ARRAY: '
-    print lat_arr
-    print ' '
-    print 'LONGITUDE ARRAY: '
-    print lon_arr  
+    if ver==True:
+        print ' '
+        print 'LATITUDE ARRAY: '
+        print lat_arr
+        print ' '
+        print 'LONGITUDE ARRAY: '
+        print lon_arr  
     
     return filename,lon_arr,lat_arr,oom,surfp,p_BAR,data_26,data_lo
