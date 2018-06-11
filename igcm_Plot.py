@@ -286,7 +286,7 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
             plt.xlabel('Longitude [radians]',fontsize=20)
       
         if savefig==True:
-            plt.savefig(savename,rasterized=True)
+            plt.savefig(savename,rasterized=True,transparent=True)
         if ver==True:
             plt.show()
         
@@ -505,7 +505,7 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         #plt.xticks(fontsize=18,fontproperties=font)
       
         if savefig==True:
-            plt.savefig(savename,rasterized=True)
+            plt.savefig(savename,rasterized=True,transparent=True)
         if ver==True:
             plt.show()
         

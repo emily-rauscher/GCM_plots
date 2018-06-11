@@ -27,7 +27,7 @@ from load_data import load_data
 #      4=v wind
 #      5=temps
 #def lon_avg(plot,lev,lo,data_t21,data_t42,data_t63,lats_t21,lats_t42,lats_t63):
-def lon_avg(path,plot,lev,lo,ln,tn):
+def lon_avg_comp(path,plot,lev,lo,ln,tn):
     nnames=0
     print '********** Maximum of 4 RUNS currently **********'
     print '*************************************************'
@@ -170,5 +170,69 @@ def lon_avg(path,plot,lev,lo,ln,tn):
                 if nnames>3:
                     plt.savefig(path+runname_4+'/LongAvg_VWinds_Comparison.pdf')
     
+    plt.show()
+
+def lon_avg(plot,path,data,lon_arr,lat_arr,lev,lo,ln,tn):
+    if lo==True:
+        data_lo_1=data
+    else:
+        data_26_1=data
+    lon_arr_1=lon_arr
+    lat_arr_1=lat_arr
+    #########################    
+    if plot==0: #TEMPERATURE
+        if lo==True:
+            ind=0
+        else:  
+            ind=5
+    elif plot==1:
+        if lo==True:
+            ind=1
+        else:
+            ind=3 # uwind
+    elif plot==2:
+        if lo==True:
+            ind=2
+        else:
+            ind=4 # vwind
+    
+    if lo==True:
+        data_1=np.median((np.nanmedian(data_lo_1,axis=4))[lev,:,:,ind],axis=0)
+    else:
+        print lev,ind
+        data_1=np.median(np.copy(data_26_1[lev,:,:,ind]),axis=0)
+    
+    
+    plt.figure(figsize=(6.25,8))
+    plt.gcf().subplots_adjust(bottom=0.08,top=0.97,left=0.17,right=0.97)
+    
+    ncolor=40
+    color_list = plt.cm.plasma(np.linspace(0., 1, ncolor))
+    color1=color_list[int(ncolor/2)]
+
+    
+    tn=tn
+    ln=ln
+    plt.plot(data_1,lat_arr_1,linewidth=5.0,linestyle='-',color=color1)
+
+    
+    plt.ylabel('Latitude [degrees]',fontsize=20)
+    if plot==0:
+        plt.xlabel('Temperature [K]',fontsize=20)
+    if plot==1:
+        plt.xlabel('E-W Wind [m/s]',fontsize=20)
+    if plot==2:
+        plt.xlabel('N-S Wind [m/s]',fontsize=20)
+    
+    plt.yticks(fontsize=18,fontproperties=font)
+    plt.xticks(fontsize=18,fontproperties=font)
+    
+    if plot==0:
+        plt.savefig(path+'/LongAvg_Temps.pdf')
+    if plot==1:
+        plt.savefig(path+'/LongAvg_UWinds.pdf')
+    if plot==2:
+        plt.savefig(path+'/LongAvg_VWinds.pdf')
+
     plt.show()
 
