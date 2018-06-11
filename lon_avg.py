@@ -52,7 +52,7 @@ def lon_avg(path,plot,lev,lo,ln,tn):
                 ###################
                 enter=raw_input('Enter another run name?? (y or n)')
                 if 'y' in enter:
-                    runname_1,lon_arr_1,lat_arr_1,oom_1,surfp_1,p_BAR_1,data_26_1,data_lo_1=load_data(path,lo,False)
+                    runname_4,lon_arr_4,lat_arr_4,oom_4,surfp_4,p_BAR_4,data_26_4,data_lo_4=load_data(path,lo,False)
                     nnames+=1
                     print '*************************************************'
                 else:
@@ -114,7 +114,7 @@ def lon_avg(path,plot,lev,lo,ln,tn):
         color1=color_list[int(8*ncolor/10)]
         color2=color_list[int(ncolor/2)]
         color3=color_list[int(ncolor/10)]
-    if nnames==3:
+    if nnames==4:
         color1=color_list[int(8*ncolor/10)]
         color2=color_list[int(6*ncolor/10)]
         color3=color_list[int(3*ncolor/10)]
@@ -135,7 +135,12 @@ def lon_avg(path,plot,lev,lo,ln,tn):
                 plt.figtext(ln,tn-0.04*3.,runname_4,fontsize=20,fontproperties=fontb,color=color4)
     
     plt.ylabel('Latitude [degrees]',fontsize=20)
-    plt.xlabel('E-W Wind [m/s]',fontsize=20)
+    if plot==0:
+        plt.xlabel('Temp [K]',fontsize=20)
+    if plot==1:
+        plt.xlabel('E-W Wind [m/s]',fontsize=20)
+    if plot==2:
+        plt.xlabel('N-S Wind [m/s]',fontsize=20)
     
     plt.yticks(fontsize=18,fontproperties=font)
     plt.xticks(fontsize=18,fontproperties=font)
