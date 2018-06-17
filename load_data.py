@@ -3,7 +3,7 @@ import math
 
 from scipy.io import readsav
 
-def load_data(path,LO,ver):
+def load_data(path,LO,OLR,ver):
     filename=raw_input('Run Name?:')
     oom=input('Pressure OOM?:')
     surfp=input('Surface Press [bar]:')
@@ -17,6 +17,10 @@ def load_data(path,LO,ver):
         data_lo=readsav(path+filename+'/finalorb.sav')['all_dat']
     else:
         data_lo=np.empty(data_26.shape)
+    if OLR==True:
+        data_olr=readsav(path+filename+'/olr.sav')['olr']
+    else:
+        data_olr=np.empty(data_26.shape)
 
     if ver==True:
         print ' '
@@ -65,4 +69,4 @@ def load_data(path,LO,ver):
         print 'LONGITUDE ARRAY: '
         print lon_arr  
     
-    return filename,lon_arr,lat_arr,oom,surfp,p_BAR,data_26,data_lo
+    return filename,lon_arr,lat_arr,oom,surfp,p_BAR,data_26,data_lo,data_olr

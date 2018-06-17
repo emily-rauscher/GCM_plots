@@ -97,14 +97,24 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
             data_26_v=np.copy(data[lev,:,:,4])
         
         #data_26_W=(np.sqrt(np.square(data_26_u)+np.square(data_26_v)))
-    
-    data_26=np.copy(data[lev,:,:,ind])
+    if plot==4: # plotting OLR, different input file used!
+        # LO CAN NOT BE TRUE HERE
+        heat=plt.cm.hot(np.linspace(0.05,0.95,128))
+        #colors2=np.array([])
+                              
+    if plot<4:
+        data_26=np.copy(data[lev,:,:,ind])
+    if plot==4:
+        data_26=np.copy(data)
        
     #######################################
 
     # combine them and build a new colormap
-    colors = np.vstack((colors1, colors2))
-    mymap = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors)
+    if plot<4:
+        colors = np.vstack((colors1, colors2))
+        mymap = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors)
+    if plot==4:
+        mymap = mcolors.LinearSegmentedColormap.from_list('my_colormap', heat)
 
     #########################################
     # set up lat and lon units
@@ -203,7 +213,10 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
     ###################################
     if ortho==False:
     
-        plt.figure(figsize=(10,6.25))
+        if plot<4:
+            plt.figure(figsize=(10,6.25))
+        if plot==4:
+            plt.figure(figsize=(10+3.125,6.25))
         plt.gcf().subplots_adjust(bottom=0.12,top=0.95,left=0.12,right=0.99)
 
         #shifting arrays so centered at lat and lon=0.0
@@ -271,6 +284,8 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
                 plt.figtext(0.84,0.5,'N-S Wind [km/s]',fontsize=20,rotation='vertical',ha='center',va='center')
             if units_w==2:
                 plt.figtext(0.84,0.5,'N-S Wind [mph]',fontsize=20,rotation='vertical',ha='center',va='center')
+        if plot==4:
+            plt.figtext(0.84,0.5,'Outgoing Radiation [W/m$^2$]',fontsize=20,rotation='vertical',ha='center',va='center')
 
         plt.yticks(fontsize=18,fontproperties=font)
         plt.xticks(fontsize=18,fontproperties=font)
@@ -500,6 +515,8 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
                 plt.figtext(0.8,0.5,'N-S Wind [km/s]',fontsize=20,rotation='vertical',ha='center',va='center')
             if units_w==2:
                 plt.figtext(0.8,0.5,'N-S Wind [mph]',fontsize=20,rotation='vertical',ha='center',va='center')
+        if plot==4:
+            plt.figtext(0.84,0.5,'Outgoing Radiation [W/m$^2$]',fontsize=20,rotation='vertical',ha='center',va='center')
 
         #plt.yticks(fontsize=18,fontproperties=font)
         #plt.xticks(fontsize=18,fontproperties=font)

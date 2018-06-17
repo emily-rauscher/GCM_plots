@@ -34,25 +34,25 @@ def lon_avg_comp(path,plot,lev,lo,ln,tn):
     ###################
     enter='y'#raw_input('Enter another run name?? (y or n)')
     if 'y' in enter:
-        runname_1,lon_arr_1,lat_arr_1,oom_1,surfp_1,p_BAR_1,data_26_1,data_lo_1=load_data(path,lo,False)
+        runname_1,lon_arr_1,lat_arr_1,oom_1,surfp_1,p_BAR_1,data_26_1,data_lo_1,data_olr_1=load_data(path,lo,False)
         nnames+=1
         ###################
         print '*************************************************'
         enter=raw_input('Enter another run name?? (y or n)')
         if 'y' in enter:
-            runname_2,lon_arr_2,lat_arr_2,oom_2,surfp_2,p_BAR_2,data_26_2,data_lo_2=load_data(path,lo,False)
+            runname_2,lon_arr_2,lat_arr_2,oom_2,surfp_2,p_BAR_2,data_26_2,data_lo_2,data_olr_2=load_data(path,lo,False)
             nnames+=1
             print '*************************************************'
             ###################
             enter=raw_input('Enter another run name?? (y or n)')
             if 'y' in enter:
-                runname_3,lon_arr_3,lat_arr_3,oom_3,surfp_3,p_BAR_3,data_26_3,data_lo_3=load_data(path,lo,False)
+                runname_3,lon_arr_3,lat_arr_3,oom_3,surfp_3,p_BAR_3,data_26_3,data_lo_3,data_olr_3=load_data(path,lo,False)
                 nnames+=1
                 print '*************************************************'
                 ###################
                 enter=raw_input('Enter another run name?? (y or n)')
                 if 'y' in enter:
-                    runname_4,lon_arr_4,lat_arr_4,oom_4,surfp_4,p_BAR_4,data_26_4,data_lo_4=load_data(path,lo,False)
+                    runname_4,lon_arr_4,lat_arr_4,oom_4,surfp_4,p_BAR_4,data_26_4,data_lo_4,data_olr_5=load_data(path,lo,False)
                     nnames+=1
                     print '*************************************************'
                 else:
@@ -146,33 +146,33 @@ def lon_avg_comp(path,plot,lev,lo,ln,tn):
     plt.xticks(fontsize=18,fontproperties=font)
     
     if plot==0:
-        plt.savefig(path+runname_1+'/LongAvg_Temps_Comparison.pdf')
+        plt.savefig(path+runname_1+'/LongAvg_Temps_Comparison.pdf',transparent=True)
         if nnames>1:
-            plt.savefig(path+runname_2+'/LongAvg_Temps_Comparison.pdf')
+            plt.savefig(path+runname_2+'/LongAvg_Temps_Comparison.pdf',transparent=True)
             if nnames>2:
-                plt.savefig(path+runname_3+'/LongAvg_Temps_Comparison.pdf')
+                plt.savefig(path+runname_3+'/LongAvg_Temps_Comparison.pdf',transparent=True)
                 if nnames>3:
-                    plt.savefig(path+runname_4+'/LongAvg_Temps_Comparison.pdf')
+                    plt.savefig(path+runname_4+'/LongAvg_Temps_Comparison.pdf',transparent=True)
     if plot==1:
-        plt.savefig(path+runname_1+'/LongAvg_UWinds_Comparison.pdf')
+        plt.savefig(path+runname_1+'/LongAvg_UWinds_Comparison.pdf',transparent=True)
         if nnames>1:
-            plt.savefig(path+runname_2+'/LongAvg_UWinds_Comparison.pdf')
+            plt.savefig(path+runname_2+'/LongAvg_UWinds_Comparison.pdf',transparent=True)
             if nnames>2:
-                plt.savefig(path+runname_3+'/LongAvg_UWinds_Comparison.pdf')
+                plt.savefig(path+runname_3+'/LongAvg_UWinds_Comparison.pdf',transparent=True)
                 if nnames>3:
-                    plt.savefig(path+runname_4+'/LongAvg_UWinds_Comparison.pdf')
+                    plt.savefig(path+runname_4+'/LongAvg_UWinds_Comparison.pdf',transparent=True)
     if plot==2:
-        plt.savefig(path+runname_1+'/LongAvg_VWinds_Comparison.pdf')
+        plt.savefig(path+runname_1+'/LongAvg_VWinds_Comparison.pdf',transparent=True)
         if nnames>1:
-            plt.savefig(path+runname_2+'/LongAvg_VWinds_Comparison.pdf')
+            plt.savefig(path+runname_2+'/LongAvg_VWinds_Comparison.pdf',transparent=True)
             if nnames>2:
-                plt.savefig(path+runname_3+'/LongAvg_VWinds_Comparison.pdf')
+                plt.savefig(path+runname_3+'/LongAvg_VWinds_Comparison.pdf',transparent=True)
                 if nnames>3:
-                    plt.savefig(path+runname_4+'/LongAvg_VWinds_Comparison.pdf')
+                    plt.savefig(path+runname_4+'/LongAvg_VWinds_Comparison.pdf',transparent=True)
     
     plt.show()
 
-def lon_avg(plot,path,data,lon_arr,lat_arr,lev,lo,ln,tn):
+def lon_avg(plot,path,data,lon_arr,lat_arr,lev,lo,ln,tn,noy):
     if lo==True:
         data_lo_1=data
     else:
@@ -201,22 +201,37 @@ def lon_avg(plot,path,data,lon_arr,lat_arr,lev,lo,ln,tn):
     else:
         print lev,ind
         data_1=np.median(np.copy(data_26_1[lev,:,:,ind]),axis=0)
+        
+    if plot==0:  #calculate average equator to pole temp diff
+        tmin=np.nanmin(data_1)
+        tmax=np.nanmax(data_1)
+        delt=np.abs(tmax-tmin)
     
     
-    plt.figure(figsize=(6.25,8))
+    plt.figure(figsize=(4,8))
     plt.gcf().subplots_adjust(bottom=0.08,top=0.97,left=0.17,right=0.97)
     
-    ncolor=40
-    color_list = plt.cm.plasma(np.linspace(0., 1, ncolor))
-    color1=color_list[int(ncolor/2)]
+#     ncolor=40
+#     color_list = plt.cm.plasma(np.linspace(0., 1, ncolor))
+#     color1=color_list[int(ncolor/6)]
 
+    color1='slateblue'
     
     tn=tn
     ln=ln
-    plt.plot(data_1,lat_arr_1,linewidth=5.0,linestyle='-',color=color1)
-
+    plt.plot(data_1,lat_arr_1,linewidth=8.0,linestyle='-',color=color1)
     
-    plt.ylabel('Latitude [degrees]',fontsize=20)
+    ex_t=2
+    if plot==0:
+        plt.axhline(y=0,xmin=ex_t/(delt+2*ex_t),xmax=(ex_t+delt)/(delt+2*ex_t),color=color1,linewidth=2.0,alpha=0.7)
+        plt.figtext(0.25,0.55,'$\Delta$T = '+str(int(delt))+' K',fontsize=20,fontproperties=font,color=color1,alpha=0.9)
+
+    if noy==False:
+        plt.ylabel('Latitude [degrees]',fontsize=20)
+        plt.yticks(fontsize=18,fontproperties=font)
+    else:
+        plt.yticks([],[])
+        
     if plot==0:
         plt.xlabel('Temperature [K]',fontsize=20)
     if plot==1:
@@ -224,15 +239,16 @@ def lon_avg(plot,path,data,lon_arr,lat_arr,lev,lo,ln,tn):
     if plot==2:
         plt.xlabel('N-S Wind [m/s]',fontsize=20)
     
-    plt.yticks(fontsize=18,fontproperties=font)
     plt.xticks(fontsize=18,fontproperties=font)
+    if plot==0:
+        plt.xlim(tmin-ex_t,tmax+ex_t)
     
     if plot==0:
-        plt.savefig(path+'/LongAvg_Temps.pdf')
+        plt.savefig(path+'/LongAvg_Temps.pdf',transparent=True)
     if plot==1:
-        plt.savefig(path+'/LongAvg_UWinds.pdf')
+        plt.savefig(path+'/LongAvg_UWinds.pdf',transparent=True)
     if plot==2:
-        plt.savefig(path+'/LongAvg_VWinds.pdf')
+        plt.savefig(path+'/LongAvg_VWinds.pdf',transparent=True)
 
     plt.show()
 
