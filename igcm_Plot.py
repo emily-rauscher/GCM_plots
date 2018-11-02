@@ -241,7 +241,26 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
                     CENTER_V[i-nlon/2,:]=data_26_v[i,:]
             plt_U0=CENTER_U
             plt_V0=CENTER_V
-      
+       
+        if loncenter!=0:
+            SHIFT=np.zeros([nlon,nlat])
+            plt_lon_n=np.zeros_like(plt_lon)
+            
+            nl=np.argmin(np.abs(plt_lon-loncenter))
+            print plt_lon[nl]
+            if nl<nlon/2:
+                SHIFT[:(nlon/2-nl),:]=CENTER[(nlon-(nlon/2-nl)):,:]
+                SHIFT[(nlon/2-nl):,:]=CENTER[:(nlon-(nlon/2-nl)),:]
+                plt_lon_n[:(nlon/2-nl)]=plt_lon[(nlon-(nlon/2-nl)):]
+                plt_lon_n[(nlon/2-nl):]=plt_lon[:(nlon-(nlon/2-nl))]
+            if nl>nlon/2:
+                SHIFT[:(3*nlon/2-nl),:]=CENTER[(nl-nlon/2):,:]
+                SHIFT[(3*nlon/2-nl):,:]=CENTER[:(nl-nlon/2),:]
+                plt_lon_n[:(3*nlon/2-nl)]=plt_lon[(nl-nlon/2):]
+                plt_lon_n[(3*nlon/2-nl):]=plt_lon[:(nl-nlon/2)]
+            
+            plt_lon=plt_lon+loncenter
+            plt_data=SHIFT
 
         LON,LAT=np.meshgrid(plt_lon,lat_arr)
         
@@ -286,12 +305,13 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
                 plt.figtext(0.84,0.5,'N-S Wind [mph]',fontsize=20,rotation='vertical',ha='center',va='center')
         if plot==4:
             plt.figtext(0.84,0.5,'Outgoing Radiation [W/m$^2$]',fontsize=20,rotation='vertical',ha='center',va='center')
-
+        
         plt.yticks(fontsize=18,fontproperties=font)
-        plt.xticks(fontsize=18,fontproperties=font)
+        plt.xticks(fontsize=18,fontproperties=font)   
         
         plt.ylim(np.nanmin(lat_arr),np.nanmax(lat_arr))
-        plt.xlim(np.nanmin(plt_lon),np.nanmax(plt_lon))
+        if loncenter==0:
+            plt.xlim(np.nanmin(plt_lon),np.nanmax(plt_lon))
 
         if units_a==1:
             plt.ylabel('Latitude [${\circ}$]',fontsize=20)
