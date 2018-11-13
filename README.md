@@ -5,3 +5,5 @@ This Repository contains python functions and notebooks designed to replicated t
 -> Each notebook replicates an old IDL script, with an associated .py function
 
 -> Each notebook (hopefully) contains detailed instructions for what each necessary input is
+
+Note: since git sees a "change" to notebooks when you just run them and don't actually change them, you can use git stash to "hide" that from git before you do a git pull
