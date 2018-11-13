@@ -8,6 +8,15 @@ import matplotlib.colors as mcolors
 import matplotlib.patches as patches
 
 from matplotlib.font_manager import FontProperties
+font0=FontProperties()
+font=font0.copy()
+font.set_family('serif')
+
+fontb=font.copy()
+fontb.set_weight('bold')
+
+params = {'font.family': 'serif',}
+matplotlib.rcParams.update(params)
 
 
 def KEplot(path,runname,lay,savename,minv,maxv):
@@ -79,9 +88,13 @@ def KEplot(path,runname,lay,savename,minv,maxv):
 
     p=plt.contourf(day,PRESS_P,newke,levels=cbar_levs,cmap=mymap)
     c=plt.colorbar(p)
+    c.ax.tick_params(labelsize=18)
     plt.grid(color='white',linewidth=0.5,linestyle='--',alpha=0.5, zorder=10)
     plt.yscale('log')
     plt.gca().invert_yaxis()
+    plt.ylabel('Pressure [bar]', fontsize=20)
+    plt.xlabel('Planet Day', fontsize=20)
+    
     plt.savefig(savename,rasterized=True)
     plt.show()
     plt.close()
