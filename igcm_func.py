@@ -284,7 +284,7 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         if plot==3:
             data_26_W=(np.sqrt(np.square(plt_U0)+np.square(plt_V0)))
             lw=5.*data_26_W/np.nanmax(data_26_W)
-            plt.streamplot(LON,LAT,plt_U0.T,plt_V0.T,density=vfrac,color='black',linewidth=lw.T,zorder=10)
+            plt.streamplot(LON,LAT,plt_U0.T,plt_V0.T,density=vfrac,color='dimgrey',linewidth=lw.T,zorder=10)
         
         if plot==0 or plot==3:
             if units_t==0:
@@ -323,7 +323,10 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         else:
             plt.ylabel('Latitude [radians]',fontsize=20)
             plt.xlabel('Longitude [radians]',fontsize=20)
-      
+        if caption==True:
+            rectangle=patches.Rectangle((loncenter+88,75), 100,25, fill=True, fc='#ECE0DD')
+            plt.gca().add_patch(rectangle)
+            plt.annotate(cap, (loncenter+90,80), fontsize='16', color='black', weight='bold',zorder=15)
         if savefig==True:
             plt.savefig(savename,rasterized=True,transparent=True)
         if ver==True:
@@ -544,10 +547,7 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
 
         #plt.yticks(fontsize=18,fontproperties=font)
         #plt.xticks(fontsize=18,fontproperties=font)
-        if caption==True:
-            rectangle=patches.Rectangle((loncenter+88,75), 100,25, fill=True, fc='#ECE0DD')
-            plt.gca().add_patch(rectangle)
-            plt.annotate(cap, (loncenter+100,80), fontsize='16', color='black', weight='bold')
+   
       
         if savefig==True:
             plt.savefig(savename,rasterized=True,transparent=True)
