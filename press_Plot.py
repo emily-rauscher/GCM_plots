@@ -6,6 +6,7 @@ from scipy.interpolate import griddata
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+import matplotlib.patches as patches
 
 from matplotlib.font_manager import FontProperties
 font0=FontProperties()
@@ -18,8 +19,8 @@ fontb.set_weight('bold')
 params = {'font.family': 'serif',}
 matplotlib.rcParams.update(params)
 
-def press_Plot(plot,lons,lats,press,data,units_a,units_t,units_w,freeze,
-          savefig,savename,ver,cbarL,cbarM,cbar_even,ex,ncolors,longavg,long_pl,lo):
+def press_Plot(plot,lons,lats,press,data,units_a,units_t,units_w,freeze,caption,cap,
+          savefig,savename,zeros,ver,cbarL,cbarM,cbar_even,ex,ncolors,longavg,long_pl,lo,oom):
     lon_arr=lons
     lat_arr=lats
     nlon=len(lon_arr)
@@ -176,13 +177,16 @@ def press_Plot(plot,lons,lats,press,data,units_a,units_t,units_w,freeze,
     plt.figure(figsize=(8.25,8))
     plt.gcf().subplots_adjust(bottom=0.12,top=0.95,left=0.12,right=0.99)
     
-    PRESS_P,LAT=np.meshgrid(p_BAR,lat_arr)
+    LAT,PRESS_P=np.meshgrid(lat_arr,p_BAR)
     
-    p=plt.contourf(PRESS_P,LAT,plt_data.T,levels=cbar_levs,cmap=mymap,zorder=0,alpha=1.0)
+    p=plt.contourf(LAT,PRESS_P,plt_data,levels=cbar_levs,cmap=mymap,zorder=0,alpha=1.0)
     c=plt.colorbar(p)
     c.ax.tick_params(labelsize=18)
     if freeze==True:
-        plt.contour(PRESS_P,LAT,plt_data.T,levels=[freezeT],colors='black',zorder=1)
+        plt.contour(PRESS_P,LAT,plt_data,levels=[freezeT],colors='black',zorder=1)
+    if zeros==True:
+        zerolevels=0.0
+        plt.contour(LAT,PRESS_P,plt_data,levels=[zerolevels],colors='black',zorder=1)
 
     plt.grid(color='white',linewidth=0.5,linestyle='--',alpha=0.5, zorder=10)
     if plot==0:
@@ -210,16 +214,22 @@ def press_Plot(plot,lons,lats,press,data,units_a,units_t,units_w,freeze,
     plt.yticks(fontsize=18,fontproperties=font)
     plt.xticks(fontsize=18,fontproperties=font)
 
-    plt.xlim(np.nanmax(p_BAR),np.nanmin(p_BAR))
-    plt.ylim(np.nanmin(lat_arr),np.nanmax(lat_arr))
+    plt.ylim(np.nanmax(p_BAR),np.nanmin(p_BAR))
+    plt.xlim(np.nanmin(lat_arr),np.nanmax(lat_arr))
 
+    if oom >0:
+        plt.yscale('log')
     if units_a==1:
-        plt.ylabel('Latitude [degrees]',fontsize=20)
+        plt.xlabel('Latitude [degrees]',fontsize=20)
     else:
-        plt.ylabel('Latitude [radians]',fontsize=20)
+        plt.xlabel('Latitude [radians]',fontsize=20)
 
-    plt.xlabel('Pressure [bar]',fontsize=20)
-
+    plt.ylabel('Pressure [bar]',fontsize=20)
+    #adding a square caption
+    if caption==True:
+        rectangle=patches.Rectangle((45,.00001), 205,.000025, fill=True, fc='#ECE0DD')
+        plt.gca().add_patch(rectangle)
+        plt.annotate(cap, (46,.00002), fontsize='13', color='black', weight='bold')
     if savefig==True:
         plt.savefig(savename,rasterized=True)
     if ver==True:
