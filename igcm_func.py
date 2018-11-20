@@ -6,6 +6,8 @@ from scipy.interpolate import griddata
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+import matplotlib.patches as patches
+
 
 from matplotlib.font_manager import FontProperties
 font0=FontProperties()
@@ -30,7 +32,7 @@ def ortholine(R,lonl,latl,loncenter,latcenter):
             y[i]=np.nan
     return x,y
 
-def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units_t,units_w,freeze,
+def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units_t,units_w,freeze,caption,cap,
               savefig,savename,ortho,ver,cbarL,cbarM,cbar_even,ncolors,vfrac,lo):
     lon_arr=lons
     lat_arr=lats
@@ -542,6 +544,10 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
 
         #plt.yticks(fontsize=18,fontproperties=font)
         #plt.xticks(fontsize=18,fontproperties=font)
+        if caption==True:
+            rectangle=patches.Rectangle((loncenter+88,75), 100,25, fill=True, fc='#ECE0DD')
+            plt.gca().add_patch(rectangle)
+            plt.annotate(cap, (loncenter+100,80), fontsize='16', color='black', weight='bold')
       
         if savefig==True:
             plt.savefig(savename,rasterized=True,transparent=True)
