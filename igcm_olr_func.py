@@ -15,29 +15,25 @@ fontb.set_weight('bold')
 params = {'font.family': 'serif',}
 matplotlib.rcParams.update(params)
 
-def igcm_olr(path, runname, oom, surfp, createplot, savefig, savenamesw,savenaelw, WAVE, BOTH):
+def igcm_olr(path, runname, oom, surfp, radea, createplot, savefig, savenamesw,savenamelw, BOTH):
     # wave == 'LW' (1) or "SW' (2)
     # both == total energy outgoing (SW + LW)
     
-    if WAVE==1:
-        file='fort.64'
-    if wave==2:
-        file='fort.65'
         
     ##### load files #####
     with open(path+runname+'/fort.64') as f:
         first_line=f.readline()
-        nlat,nlon=first_line.split()
-        nlat,nlon=int(nlat),int(nlon)
+        nlat,nlon,nlev=first_line.split()
+        nlat,nlon,nlev=int(nlat),int(nlon),int(nlev)
         print '  '
         print ' ....reading fort.64 (LW)'
-        print '       nlat=', nlat, 'nlon=', nlon
+        print '       nlat=', nlat, 'nlon=', nlon, 'nlev=', nlon
     
     #if nlat!=len(lat_arr) or nlon!=len(lon_arr):
     #    print 'ERROR: Lat or Lon mis-match, check files'
     #    exit()
         
-    data64=np.empty([nlat*nlon,3])*0.0
+    data_64=np.empty([nlat*nlon,3])*0.0
     l=0
     with open(path+runname+'/fort.64') as f:
         for line in f:
@@ -81,17 +77,17 @@ def igcm_olr(path, runname, oom, surfp, createplot, savefig, savenamesw,savenael
     if BOTH==True:
         with open(path+runname+'/fort.65') as f:
             first_line=f.readline()
-            nlat,nlon=first_line.split()
-            nlat,nlon=int(nlat),int(nlon)
+            nlat,nlon,nlev=first_line.split()
+            nlat,nlon,nlev=int(nlat),int(nlon),int(nlev)
             print '  '
             print ' ....reading fort.65 (SW)'
-            print '       nlat=', nlat, 'nlon=', nlon
+            print '       nlat=', nlat, 'nlon=', nlon, 'nlev=', nlev
 
         #if nlat!=len(lat_arr) or nlon!=len(lon_arr):
         #    print 'ERROR: Lat or Lon mis-match, check files'
         #    exit()
 
-        data65=np.empty([nlat*nlon,3])*0.0
+        data_65=np.empty([nlat*nlon,3])*0.0
         l=0
         with open(path+runname+'/fort.65') as f:
             for line in f:
@@ -133,6 +129,28 @@ def igcm_olr(path, runname, oom, surfp, createplot, savefig, savenamesw,savenael
     
     #######################
     # Sum values for total outgoing radiation (taken from igcm_olr.pro)
+    # ' Total integrated output (W): ',total(olr*cos(lat*!pi/180.))*(2.*!pi/nlon)*(!pi/nlat)*radea^2
+    total_lw=np.nansum(data_lw[:,:,2]*np.cos(lat_arr*np.pi/180.))*(2*np.pi/nlon)*(np.pi/nlat)*radea**2.
+    total_sw=np.nansum(data_sw[:,:,2]*np.cos(lat_arr*np.pi/180.))*(2*np.pi/nlon)*(np.pi/nlat)*radea**2.
+    dayside_lw=((np.nansum(data_lw[0:np.int(nlon/4),:,2]*np.cos(lat_arr*np.pi/180.))  
+                                      +np.nansum(data_lw[np.int(nlon*3./4):nlon-1,:,2]*np.cos(lat_arr*np.pi/180.))) 
+                                    *(2.*np.pi/nlon)*(np.pi/nlat)*radea**2)
+    dayside_sw=((np.nansum(data_sw[0:np.int(nlon/4),:,2]*np.cos(lat_arr*np.pi/180.)) 
+                                      +np.nansum(data_sw[np.int(nlon*3./4):nlon-1,:,2]*np.cos(lat_arr*np.pi/180.))) 
+                                    *(2.*np.pi/nlon)*(np.pi/nlat)*radea**2)
+    print '******************************'
+    print 'Total Integrated Output (W):'
+    print '  LW:', total_lw
+    if BOTH==True:
+        print '  SW:', total_sw
+        print ' sum:', total_lw+total_sw
+    print '-------------------------------'
+    print ' Dayside Integrated Output (W):'
+    print '  LW:', dayside_lw
+    if BOTH==True:
+        print '  SW:', dayside_sw
+        print ' sum:', total_lw+total_sw
+    print '******************************'
     
     #######################
     if createplot==True:
@@ -152,7 +170,7 @@ def igcm_olr(path, runname, oom, surfp, createplot, savefig, savenamesw,savenael
         
         cbar_levs=np.round_(np.linspace(np.nanmin(plt_data)/1.01,np.nanmax(plt_data)*1.01,20),2)
         
-        p=plt.contourf(LON,LAT,plt_data.T,levels=cbar_levs,cmap=plt.cm.Purples,zorder=0)
+        p=plt.contourf(LON,LAT,plt_data.T,levels=cbar_levs,cmap=plt.cm.Reds,zorder=0)
         c=plt.colorbar(p)
         c.ax.tick_params(labelsize=18)
         
@@ -187,7 +205,7 @@ def igcm_olr(path, runname, oom, surfp, createplot, savefig, savenamesw,savenael
 
             cbar_levs=np.round_(np.linspace(np.nanmin(plt_data)/1.01,np.nanmax(plt_data)*1.01,20),2)
 
-            p=plt.contourf(LON,LAT,plt_data.T,levels=cbar_levs,cmap=plt.cm.Purples,zorder=0)
+            p=plt.contourf(LON,LAT,plt_data.T,levels=cbar_levs,cmap=plt.cm.Blues,zorder=0)
             c=plt.colorbar(p)
             c.ax.tick_params(labelsize=18)
 
@@ -206,6 +224,6 @@ def igcm_olr(path, runname, oom, surfp, createplot, savefig, savenamesw,savenael
                 plt.savefig(savenamesw,rasterized=True,transparent=True)
             plt.show()
     if BOTH==True:
-        return data_lw, data_sw, total_lw, total_Sw
+        return data_lw, data_sw, total_lw, total_sw
     else:
         return data_lw, total_lw
