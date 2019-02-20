@@ -150,7 +150,7 @@ def igcm_olr(path, runname, oom, surfp, radea, createplot, savefig, savenamesw,s
     print '  LW:', dayside_lw
     if BOTH==True:
         print '  SW:', dayside_sw
-        print ' sum:', total_lw+total_sw
+        print ' sum:', dayside_lw+dayside_sw
     print '******************************'
     
     #######################
