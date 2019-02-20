@@ -131,11 +131,12 @@ def igcm_olr(path, runname, oom, surfp, radea, createplot, savefig, savenamesw,s
     # Sum values for total outgoing radiation (taken from igcm_olr.pro)
     # ' Total integrated output (W): ',total(olr*cos(lat*!pi/180.))*(2.*!pi/nlon)*(!pi/nlat)*radea^2
     total_lw=np.nansum(data_lw[:,:,2]*np.cos(lat_arr*np.pi/180.))*(2*np.pi/nlon)*(np.pi/nlat)*radea**2.
-    total_sw=np.nansum(data_sw[:,:,2]*np.cos(lat_arr*np.pi/180.))*(2*np.pi/nlon)*(np.pi/nlat)*radea**2.
     dayside_lw=((np.nansum(data_lw[0:np.int(nlon/4),:,2]*np.cos(lat_arr*np.pi/180.))  
                                       +np.nansum(data_lw[np.int(nlon*3./4):nlon-1,:,2]*np.cos(lat_arr*np.pi/180.))) 
                                     *(2.*np.pi/nlon)*(np.pi/nlat)*radea**2)
-    dayside_sw=((np.nansum(data_sw[0:np.int(nlon/4),:,2]*np.cos(lat_arr*np.pi/180.)) 
+    if BOTH==True:
+        total_sw=np.nansum(data_sw[:,:,2]*np.cos(lat_arr*np.pi/180.))*(2*np.pi/nlon)*(np.pi/nlat)*radea**2.
+        dayside_sw=((np.nansum(data_sw[0:np.int(nlon/4),:,2]*np.cos(lat_arr*np.pi/180.)) 
                                       +np.nansum(data_sw[np.int(nlon*3./4):nlon-1,:,2]*np.cos(lat_arr*np.pi/180.))) 
                                     *(2.*np.pi/nlon)*(np.pi/nlat)*radea**2)
     print '******************************'
@@ -226,4 +227,4 @@ def igcm_olr(path, runname, oom, surfp, radea, createplot, savefig, savenamesw,s
     if BOTH==True:
         return data_lw, data_sw, total_lw, total_sw
     else:
-        return data_lw, total_lw
+        return data_lw,np.nan, total_lw,np.nan
