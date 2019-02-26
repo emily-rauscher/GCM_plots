@@ -50,19 +50,14 @@ def SurfPress(path, runname, oom, surfp, createplot, savefig, savename):
     
     print data50.shape
     
-    lon_arr_f=data50[:,0]
+    lon_arr_f=data_50[:,0]
     lon_arr=np.array([])
-    for l in range(0,len(lon_arr_f)):
-        el=lon_arr_f[l]
-        if not el in lon_arr:
-            lon_arr=np.append(lon_arr,el)
+    l=0
+    while l<data_50.shape[0]:
+        lon_arr=np.append(lon_arr,lon_arr_f[l])
+        l+=nlat
 
-    lat_arr_f=data50[:,1]
-    lat_arr=np.array([])
-    for l in range(0,len(lat_arr_f)):
-        el=lat_arr_f[l]
-        if not el in lat_arr:
-            lat_arr=np.append(lat_arr,el)
+    lat_arr=data_50[:nlat,1]
             
     data_50=np.empty([nlon,nlat,3])
     for l in range(0,data50.shape[0]):
