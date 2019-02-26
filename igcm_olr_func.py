@@ -309,7 +309,7 @@ def igcm_olr(path, runname, oom, surfp, radea, createplot, savefig, savenamelw,s
         plt.yticks(fontsize=18,fontproperties=font)
         plt.xticks(fontsize=18,fontproperties=font)
         
-        plt.figtext(0.77,0.5,'LW Outgoing Radiation',
+        plt.figtext(0.77,0.5,'LW Outgoing Radiation (W)',
                     fontsize=20,rotation='vertical',ha='center',va='center')
     
         if savefig==True:
@@ -331,8 +331,11 @@ def igcm_olr(path, runname, oom, surfp, radea, createplot, savefig, savenamelw,s
             LON,LAT=np.meshgrid(plt_lon,lat_arr)
 
             cbar_levs=np.round_(np.linspace(np.nanmin(plt_data)/1.01,np.nanmax(plt_data)*1.01,20),2)
-
-            p=plt.contourf(LON,LAT,plt_data.T,levels=cbar_levs,cmap=plt.cm.Blues,zorder=0)
+            if np.all(np.diff(cbar_levs) > 0):
+                p=plt.contourf(LON,LAT,plt_data.T,levels=cbar_levs,cmap=plt.cm.Blues,zorder=0)
+            else:
+                print '   ...calc levels not working, autogen...'
+                p=plt.contourf(LON,LAT,plt_data.T,cmap=plt.cm.Blues,zorder=0)
             c=plt.colorbar(p)
             c.ax.tick_params(labelsize=18)
 
@@ -344,7 +347,7 @@ def igcm_olr(path, runname, oom, surfp, radea, createplot, savefig, savenamelw,s
             plt.yticks(fontsize=18,fontproperties=font)
             plt.xticks(fontsize=18,fontproperties=font)
 
-            plt.figtext(0.77,0.5,'SW Outgoing Radiation',
+            plt.figtext(0.77,0.5,'SW Outgoing Radiation (W)',
                         fontsize=20,rotation='vertical',ha='center',va='center')
 
             if savefig==True:
