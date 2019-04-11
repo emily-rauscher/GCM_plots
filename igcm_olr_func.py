@@ -15,7 +15,7 @@ fontb.set_weight('bold')
 params = {'font.family': 'serif',}
 matplotlib.rcParams.update(params)
 
-def igcm_olr(path, runname, oom, surfp, radea, createplot, savefig, savenamelw,savenamesw, BOTH,LastOrb):
+def igcm_olr(path, runname, oom, surfp, radea, createplot, savefig, savenamelw,savenamesw,savenametot, BOTH,total,LastOrb):
     # wave == 'LW' (1) or "SW' (2)
     # both == total energy outgoing (SW + LW)
     
@@ -119,6 +119,54 @@ def igcm_olr(path, runname, oom, surfp, radea, createplot, savefig, savenamelw,s
             
             data_sw=data_sw[:,:,2]
             print 'SW', data_sw.shape
+        if total==True:
+            with open(path+runname+'/fort.66') as f:
+                first_line=f.readline()
+                nlat,nlon,nlev=first_line.split()
+                nlat,nlon,nlev=int(nlat),int(nlon),int(nlev)
+                print '  '
+                print ' ....reading fort.66 (Total)'
+                print '       nlat=', nlat, 'nlon=', nlon, 'nlev=', nlev
+
+            #if nlat!=len(lat_arr) or nlon!=len(lon_arr):
+            #    print 'ERROR: Lat or Lon mis-match, check files'
+            #    exit()
+
+            data_66=np.empty([nlat*nlon,3])*0.0
+            l=0
+            with open(path+runname+'/fort.66') as f:
+                for line in f:
+                    if l==0:
+                        l+=1
+                        continue
+                    if l>nlat*nlon:
+                        continue
+                        l+=1
+                    #print line, line.split()
+                    data_66[l-1] = line.split()
+                    l+=1
+                print '       END OF FILE: DONE'
+            f.close()
+
+            print data_66.shape
+
+            lon_arr_f=data_66[:,0]
+            lon_arr=np.array([])
+            l=0
+            while l<data_66.shape[0]:
+                lon_arr=np.append(lon_arr,lon_arr_f[l])
+                l+=nlat
+
+            lat_arr=data_66[:nlat,1]
+
+            data_tot=np.empty([nlon,nlat,3])
+            for l in range(0,data_66.shape[0]):
+                lon,lat=data_66[l,:2]
+                lon_i,lat_i=np.where(lon_arr==lon)[0][0],np.where(lat_arr==lat)[0][0]
+                data_tot[lon_i,lat_i,:]=data_66[l,:]
+            
+            data_tot=data_tot[:,:,2]
+            print 'tot', data_tot.shape
             
     if LastOrb==True:
         print ' DOING LAST ORBIT AVERAGES....'
@@ -265,12 +313,16 @@ def igcm_olr(path, runname, oom, surfp, radea, createplot, savefig, savenamelw,s
         dayside_sw=((np.nansum(data_sw[0:np.int(nlon/4),:]*np.cos(lat_arr*np.pi/180.)) 
                                       +np.nansum(data_sw[np.int(nlon*3./4):nlon-1,:]*np.cos(lat_arr*np.pi/180.))) 
                                     *(2.*np.pi/nlon)*(np.pi/nlat)*radea**2)
+    if total==True:
+        total_=np.nansum(data_tot[:,:]*np.cos(lat_arr*np.pi/180.))*(2*np.pi/nlon)*(np.pi/nlat)*radea**2.
     print '******************************'
     print 'Total Integrated Output (W):'
     print '  LW:', total_lw
     if BOTH==True:
         print '  SW:', total_sw
         print ' sum:', total_lw+total_sw
+    if total==True:
+        print '  Net:', total_,np.nansum(data_tot)
     print '-------------------------------'
     print ' Dayside Integrated Output (W):'
     print '  LW:', dayside_lw
@@ -278,6 +330,7 @@ def igcm_olr(path, runname, oom, surfp, radea, createplot, savefig, savenamelw,s
         print '  SW:', dayside_sw
         print ' sum:', dayside_lw+dayside_sw
     print '******************************'
+    
     
     #######################
     if createplot==True:
@@ -353,7 +406,49 @@ def igcm_olr(path, runname, oom, surfp, radea, createplot, savefig, savenamelw,s
             if savefig==True:
                 plt.savefig(savenamesw,rasterized=True,transparent=True)
             plt.show()
-    if BOTH==True:
-        return data_lw, data_sw, total_lw, total_sw,lon_arr,lat_arr
+        if total==True:
+            plt.figure(2,figsize=(10,6.25))
+            #shifting arrays so centered at lat and lon=0.0
+            CENTER=np.zeros([nlon,nlat])
+            for i in range(0,len(lon_arr)):
+                if i<nlon/2:
+                    CENTER[i+nlon/2,:]=data_tot[i,:]
+                if i>=nlon/2:
+                    CENTER[i-nlon/2,:]=data_tot[i,:]
+            plt_data=CENTER
+            plt_lon=np.linspace(-180,180,nlon)
+
+            LON,LAT=np.meshgrid(plt_lon,lat_arr)
+
+            edge=np.nanmax([np.abs(np.nanmin(plt_data)),np.abs(np.nanmax(plt_data))])
+            cbar_levs=np.round_(np.linspace(-1.01*edge,1.01*edge,21),2)
+            if np.all(np.diff(cbar_levs) > 0):
+                p=plt.contourf(LON,LAT,plt_data.T,levels=cbar_levs,cmap=plt.cm.BrBG,zorder=0)
+            else:
+                print '   ...calc levels not working, autogen...'
+                p=plt.contourf(LON,LAT,plt_data.T,cmap=plt.cm.Blues,zorder=0)
+            c=plt.colorbar(p)
+            c.ax.tick_params(labelsize=18)
+
+            plt.ylim(np.nanmin(lat_arr),np.nanmax(lat_arr))
+            plt.xlim(np.nanmin(plt_lon),np.nanmax(plt_lon))
+
+            plt.ylabel('Latitude [${\circ}$]',fontsize=20)
+            plt.xlabel('Longitude [${\circ}$]',fontsize=20)
+            plt.yticks(fontsize=18,fontproperties=font)
+            plt.xticks(fontsize=18,fontproperties=font)
+
+            plt.figtext(0.77,0.5,'Net Flux (W/m$^2$)',
+                        fontsize=20,rotation='vertical',ha='center',va='center')
+
+            if savefig==True:
+                plt.savefig(savenametot,rasterized=True,transparent=True)
+            plt.show()
+    if BOTH==False:
+        data_sw=np.nan
+        total_sw=np.nan
+    if total==False:
+        data_tot=np.nan
+        total_=np.nan
     else:
-        return data_lw,np.nan, total_lw,np.nan,lon_arr,lat_arr
+        return data_lw,data_sw,data_tot, total_lw,total_sw,total_,lon_arr,lat_arr
