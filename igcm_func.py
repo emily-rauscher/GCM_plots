@@ -34,7 +34,7 @@ def ortholine(R,lonl,latl,loncenter,latcenter):
     return x,y
 
 def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units_t,units_w,freeze,caption,cap,
-              savefig,savename,ortho,ver,cbarL,cbarM,cbar_even,ncolors,vfrac,lo):
+              savefig,savename,ortho,ver,cbarL,cbarM,cbar_even,ncolors,vfrac,lo,bckd):
     lon_arr=lons
     lat_arr=lats
     nlon=len(lon_arr)
@@ -78,6 +78,7 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         
         colors1 = plt.cm.BuGn_r(np.linspace(0, 1, 128))
         colors2 = plt.cm.RdPu(np.linspace(0., 1, 128))
+        cm_data = np.vstack((colors1, colors2))
     if plot==2:
         if lo==True:
             ind=2
@@ -86,7 +87,7 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         
         colors1 = plt.cm.Purples_r(np.linspace(0, 1, 128))
         colors2 = plt.cm.Oranges(np.linspace(0., 1, 128))
-        
+        cm_data = np.vstack((colors1, colors2))
     
     if plot==3:  #PLOTTING STREAM LINES with faded temps behind
         if lo==True:
@@ -337,7 +338,7 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
             plt.gca().add_patch(rectangle)
             plt.annotate(cap, (loncenter+90,80), fontsize='16', color='black', weight='bold',zorder=15)
         if savefig==True:
-            plt.savefig(savename,rasterized=True,transparent=True)
+            plt.savefig(savename,rasterized=True,transparent=bckd)
         if ver==True:
             plt.show()
         
@@ -558,8 +559,9 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         #plt.xticks(fontsize=18,fontproperties=font)
    
       
+            
         if savefig==True:
-            plt.savefig(savename,rasterized=True,transparent=True)
+            plt.savefig(savename,rasterized=True,transparent=bckd)
         if ver==True:
             plt.show()
         
