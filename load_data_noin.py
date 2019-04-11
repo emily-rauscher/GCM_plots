@@ -3,26 +3,29 @@ import math
 
 from scipy.io import readsav
 
-def load_data(path,runname,oom, surfp, LO,OLR,ver):
+def load_data(path,runname,oom, surfp, LO,OLR,ver,fort_file):
     #runname=raw_input('Run Name?:')
     #oom=input('Pressure OOM?:')
     #surfp=input('Surface Press [bar]:')
+    
 
     ####################### READ 26 #########################
-    with open(path+runname+'/fort.26') as f:
+    with open(path+runname+'/'+fort_file) as f:
         first_line=f.readline()
         nlat,nlon,nlev=first_line.split()
         nlat,nlon,nlev=int(nlat),int(nlon),int(nlev)
         print '  '
-        print ' ....reading fort.26'
+        print ' ....reading ',fort_file
         print '       nlat=', nlat, 'nlon=', nlon, 'nlev=', nlev
     f.close()
     
     data26=np.empty([nlon*nlat*nlev, 6])
     
+    
+    
     l=0
     lp=0
-    with open(path+runname+'/fort.26') as f:
+    with open(path+runname+'/'+fort_file) as f:
         for line in f:
             if l==0:
                 l+=1

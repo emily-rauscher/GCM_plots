@@ -20,7 +20,8 @@ fontb.set_weight('bold')
 params = {'font.family': 'serif',}
 matplotlib.rcParams.update(params)
 
-from load_data import load_data
+#from load_data import load_data
+from load_data_noin import load_data
 
 def ortholine(R,lonl,latl,loncenter,latcenter):
     x=R*np.cos(latl)*np.sin(lonl-loncenter)
@@ -61,9 +62,13 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
             ind=0
         else:
             ind=5 
+            
+        cm_data = np.loadtxt("ScientificColourMaps5/roma/roma.txt")
+        cm_data=np.flip(cm_data,axis=0)
+        #print(cm_data.shape)
         
-        colors1 = plt.cm.YlGnBu_r(np.linspace(0, 1, 128))
-        colors2 = plt.cm.YlOrBr(np.linspace(0., 1, 128))
+        #colors1 = plt.cm.YlGnBu_r(np.linspace(0, 1, 128))
+        #colors2 = plt.cm.YlOrBr(np.linspace(0., 1, 128))
         
     if plot==1:
         if lo==True:
@@ -88,8 +93,10 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
             ind=0
         else:
             ind=5  #(want contours to be temp)
-        colors1 = plt.cm.YlGnBu_r(np.linspace(0, 1, 128))
-        colors2 = plt.cm.YlOrBr(np.linspace(0., 1, 128))
+        #colors1 = plt.cm.YlGnBu_r(np.linspace(0, 1, 128))
+        #colors2 = plt.cm.YlOrBr(np.linspace(0., 1, 128))
+        cm_data = np.loadtxt("ScientificColourMaps5/roma/roma.txt")
+        cm_data=np.flip(cm_data,axis=0)
         
         greys=plt.cm.gray_r(np.linspace(0., 0.75, 128))
         mygreys=mcolors.LinearSegmentedColormap.from_list('my_colormap', greys)
@@ -115,8 +122,10 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
 
     # combine them and build a new colormap
     if plot<4:
-        colors = np.vstack((colors1, colors2))
+        #colors = np.vstack((colors1, colors2))
+        colors=cm_data
         mymap = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors)
+        #mymap = mymap_r
     if plot==4:
         mymap = mcolors.LinearSegmentedColormap.from_list('my_colormap', heat)
 
@@ -654,9 +663,10 @@ def lon_avg(plot,path,data,lon_arr,lat_arr,lev,lo,ln,tn,noy):
     plt.show()
     return
 
-def add_run(path,lo,lev,ind,runnum,curdata,lat_arr_out,runname_out):
+def add_run(path,lo,lev,ind,runnum,curdata,lat_arr_out,runname_out,label_out):
     runname,lon_arr,lat_arr,oom,surp,p_BAR,data_26,data_lo,data_olr=load_data(path,lo,False,False)
     runnum+=1
+    label=raw_input('Plot Label?:')
     
     levl=np.argmin(np.abs(p_BAR-lev))
     print 'closest level to ', lev, ' BARS is #',levl
@@ -671,17 +681,21 @@ def add_run(path,lo,lev,ind,runnum,curdata,lat_arr_out,runname_out):
         curdata=data
         lat_arr_out=lat_arr
         runname_out=np.array([runname])
+        label_out=np.array([label])
     else:
         curdata=np.vstack((curdata,data))
         lat_arr_out=np.vstack((lat_arr_out,lat_arr))
         runname_out=np.append(runname_out,runname)
+        label_out=np.append(label_out,label)
+        
     print curdata.shape
     print runname_out
-    return curdata,lat_arr_out,runname_out,runnum
+    print label_out
+    return curdata,lat_arr_out,runname_out,label_out,runnum
 
     
 
-def lon_avg_comp(path,plot,lev,lo,ln,tn):
+def lon_avg_comp(path,plot,lev,lo,ln,tn,runnames,ooms,p0s,labels):
     
     if plot==0: #TEMPERATURE
         if lo==True:
@@ -699,15 +713,61 @@ def lon_avg_comp(path,plot,lev,lo,ln,tn):
         else:
             ind=4 # vwind
                     
-    curdata=0
-    lat_arr_out=0
-    runname_out=0
-    add_run_in='y'
-    runnum=0
-    while add_run_in=='y':
-        curdata,lat_arr_out,runname_out,runnum=add_run(path,lo,lev,ind,runnum,curdata,lat_arr_out,runname_out)
-        print '--------------'
-        add_run_in=raw_input('Enter another run name?? (y or n)')    
+#     curdata=0
+#     lat_arr_out=0
+#     runname_out=0
+#     label_out=0
+#     add_run_in='y'
+#     runnum=0
+#     while add_run_in=='y':
+#         curdata,lat_arr_out,runname_out,label_out,runnum=add_run(path,lo,lev,ind,
+#                                                                  runnum,curdata,lat_arr_out,runname_out,label_out)
+#         print '--------------'
+#         add_run_in=raw_input('Enter another run name?? (y or n)')    
+    for i,n in enumerate(runnames):
+        print '------', n, '------' 
+        if lo==True:
+            print ' DOING LAST ORBIT AVERAGES....'
+            filen=2600
+            while filen<2690:
+                #print '----', filen, '----'
+                file_26='fort.'+str(int(filen))
+                runname,lon_arr,lat_arr,oom,surfp,p_BAR,data_26h,data_lo,data_olr=load_data(path,
+                                                                                       runnames[i],
+                                                                                       ooms[i], p0s[i],
+                                                                                       False,False,False,file_26)
+                if filen==2600:
+                    levl=np.argmin(np.abs(p_BAR-lev))
+                    print 'closest level to ', lev, ' BARS is #',levl
+                    data_h=np.median(np.copy(data_26h[levl,:,:,ind]),axis=0)
+                    data=np.copy(data_h)
+                elif filen>2600:
+                    data_h=np.median(np.copy(data_26h[levl,:,:,ind]),axis=0)
+                    data=np.vstack((data,data_h))
+                print data.shape
+                filen+=1
+
+
+            print '-----------------'    #print '            (', data_64.shape, ' )'
+            data_26=np.nanmean(data_26,axis=0)  #median along time
+            print data_26.shape
+            
+        else:
+            runname,lon_arr,lat_arr,oom,surfp,p_BAR,data_26,data_lo,data_olr=load_data(path,
+                                                                                   runnames[i],
+                                                                                   ooms[i], p0s[i],
+                                                                                   False,False,False,'fort.26')
+            levl=np.argmin(np.abs(p_BAR-lev))
+            print 'closest level to ', lev, ' BARS is #',levl
+            data=np.median(np.copy(data_26[levl,:,:,ind]),axis=0)
+        
+        if i==0:
+            curdata=data
+            lat_arr_out=lat_arr
+        else:
+            curdata=np.vstack((curdata,data)) 
+            lat_arr_out=np.vstack((lat_arr_out,lat_arr))
+        print ' '
     
     plt.figure(figsize=(6.25,10))
     plt.gcf().subplots_adjust(bottom=0.08,top=0.97,left=0.17,right=0.97)
@@ -717,9 +777,22 @@ def lon_avg_comp(path,plot,lev,lo,ln,tn):
     
     tn=tn
     ln=ln
+    
     for i in range(0,curdata.shape[0]):
-        plt.plot(curdata[i,:],lat_arr_out[i,:],linewidth=5.0,linestyle='--',color=color_list[i+1])
-        plt.figtext(ln,tn-0.04*i,runname_out[i],fontsize=20,fontproperties=fontb,color=color_list[i+1])
+        plt.plot(curdata[i,:],lat_arr_out[i,:],linewidth=5.0,linestyle='-',color=color_list[i+1])
+        plt.figtext(ln,tn-0.04*i,labels[i],fontsize=20,fontproperties=fontb,color=color_list[i+1])
+        
+        if plot==0:  #calculate median equator-to-pole temp difference
+            tmin=np.nanmin(curdata[i,:])
+            tmax=np.nanmax(curdata[i,:])
+            delt=np.abs(tmax-tmin)
+
+            plt.hlines(y=0,xmin=tmin,xmax=tmax,
+                        color=color_list[i+1],linestyle='--',linewidth=2.5,alpha=0.7)
+            #plt.annotate('$\Delta$T = '+str(int(delt))+' K',xy=(tmin,0.55),fontsize=20,color=color_list[i+1],alpha=0.9,ha='left')
+            plt.annotate(str(int(delt))+' K',xy=(tmax-5,0.75),
+                         fontsize=20,color=color_list[i+1],alpha=1.0,ha='right',va='bottom',rotation=-90,fontweight='bold')
+                         
     
     plt.ylabel('Latitude [degrees]',fontsize=20)
     if plot==0:
@@ -733,14 +806,16 @@ def lon_avg_comp(path,plot,lev,lo,ln,tn):
     plt.xticks(fontsize=18,fontproperties=font)
     
     if plot==0:
-        for i in range(0,len(runname_out)):
-            plt.savefig(path+str(runname_out[i])+'/LongAvg_Temps_Comparison.pdf',transparent=True)
+        for i in range(0,len(runnames)):
+            plt.savefig(path+runnames[i]+'/LongAvg_Temps_Comparison.pdf',transparent=True)
 
     if plot==1:
-        plt.savefig(path+'/LongAvg_UWinds_Comparison.pdf',transparent=True)
+        for i in range(0,len(runnames)):
+            plt.savefig(path+runnames[i]+'/LongAvg_UWinds_Comparison.pdf',transparent=True)
 
     if plot==2:
-        plt.savefig(path+'/LongAvg_VWinds_Comparison.pdf',transparent=True)
+        for i in range(0,len(runnames)):
+            plt.savefig(path+runnames[i]+'/LongAvg_VWinds_Comparison.pdf',transparent=True)
 
     
     plt.show()
