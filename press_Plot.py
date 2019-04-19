@@ -49,8 +49,10 @@ def press_Plot(plot,lons,lats,press,data,units_a,units_t,units_w,freeze,caption,
         else:
             ind=5 
         
-        colors1 = plt.cm.YlGnBu_r(np.linspace(0, 1, 128))
-        colors2 = plt.cm.YlOrBr(np.linspace(0., 1, 128))
+        #colors1 = plt.cm.YlGnBu_r(np.linspace(0, 1, 128))
+        #colors2 = plt.cm.YlOrBr(np.linspace(0., 1, 128))
+        cm_data = np.loadtxt("ScientificColourMaps5/roma/roma.txt")
+        colors=np.flip(cm_data,axis=0)
         
     if plot==1:
         if lo==True:
@@ -58,8 +60,11 @@ def press_Plot(plot,lons,lats,press,data,units_a,units_t,units_w,freeze,caption,
         else:
             ind=3 # uwind
         
-        colors1 = plt.cm.BuGn_r(np.linspace(0, 1, 128))
-        colors2 = plt.cm.RdPu(np.linspace(0., 1, 128))
+        cm_data = np.loadtxt("ScientificColourMaps5/cork/cork.txt")
+        cm_data=np.flip(cm_data,axis=0)
+        #colors1 = plt.cm.BuGn_r(np.linspace(0, 1, 128))
+        #colors2 = plt.cm.RdPu(np.linspace(0., 1, 128))
+        colors = cm_data#np.vstack((colors1, colors2))
     if plot==2:
         if lo==True:
             ind=2
@@ -68,12 +73,13 @@ def press_Plot(plot,lons,lats,press,data,units_a,units_t,units_w,freeze,caption,
         
         colors1 = plt.cm.Purples_r(np.linspace(0, 1, 128))
         colors2 = plt.cm.Oranges(np.linspace(0., 1, 128))
+        colors = np.vstack((colors1, colors2))
     
     data_26=np.copy(data[:,:,:,ind])
     #######################################
 
     # combine them and build a new colormap
-    colors = np.vstack((colors1, colors2))
+    
     mymap = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors)
 
     #########################################

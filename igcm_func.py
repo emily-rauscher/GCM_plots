@@ -63,7 +63,8 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         else:
             ind=5 
             
-        cm_data = np.loadtxt("ScientificColourMaps5/roma/roma.txt")
+        #cm_data = np.loadtxt("ScientificColourMaps5/acton/acton.txt")
+        cm_data = np.loadtxt("ScientificColourMaps5/lajolla/lajolla.txt")
         cm_data=np.flip(cm_data,axis=0)
         #print(cm_data.shape)
         
@@ -75,10 +76,11 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
             ind=1
         else:
             ind=3 # uwind
-        
-        colors1 = plt.cm.BuGn_r(np.linspace(0, 1, 128))
-        colors2 = plt.cm.RdPu(np.linspace(0., 1, 128))
-        cm_data = np.vstack((colors1, colors2))
+        cm_data = np.loadtxt("ScientificColourMaps5/cork/cork.txt")
+        cm_data=np.flip(cm_data,axis=0)
+        #colors1 = plt.cm.BuGn_r(np.linspace(0, 1, 128))
+        #colors2 = plt.cm.RdPu(np.linspace(0., 1, 128))
+        #cm_data = np.vstack((colors1, colors2))
     if plot==2:
         if lo==True:
             ind=2
@@ -584,35 +586,71 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         
         return
     
-def lon_avg(plot,path,data,lon_arr,lat_arr,lev,lo,ln,tn,noy):
-    if lo==True:
-        data_lo_1=data
-    else:
-        data_26_1=data
-    lon_arr_1=lon_arr
-    lat_arr_1=lat_arr
-    #########################    
+def lon_avg(plot,path,runname,oom,p0,lev,lo,ln,tn,noy,a_lines,nfiles):
+    #if lo==True:
+    #    data_lo_1=data
+    #else:
+    #    data_26_1=data
+    #lon_arr_1=lon_arr
+    #lat_arr_1=lat_arr
+#     #########################    
+#     if plot==0: #TEMPERATURE
+#         if lo==True:
+#             ind=0
+#         else:  
+#             ind=5
+#     elif plot==1:
+#         if lo==True:
+#             ind=1
+#         else:
+#             ind=3 # uwind
+#     elif plot==2:
+#         if lo==True:
+#             ind=2
+#         else:
+#             ind=4 # vwind
     if plot==0: #TEMPERATURE
-        if lo==True:
-            ind=0
-        else:  
-            ind=5
-    elif plot==1:
-        if lo==True:
-            ind=1
-        else:
-            ind=3 # uwind
-    elif plot==2:
-        if lo==True:
-            ind=2
-        else:
-            ind=4 # vwind
-    
+        ind=5
+    if plot==1:
+        ind=3 # uwind
+    if plot==2:
+        ind=4 # vwind
+            
     if lo==True:
-        data_1=np.median((np.nanmedian(data_lo_1,axis=4))[lev,:,:,ind],axis=0)
+        print ' DOING LAST ORBIT AVERAGES....'
+        filen=2600
+        while filen<2600+nfiles:
+            #print '----', filen, '----'
+            file_26='fort.'+str(int(filen))
+            runname,lon_arr_l,lat_arr_1,oom,surfp,p_BAR,data_26h,data_lo,data_olr=load_data(path,
+                                                                                   runname,
+                                                                                   oom, p0,
+                                                                                   False,False,False,file_26)
+            if filen==2600:
+                levl=np.argmin(np.abs(p_BAR-lev))
+                print 'closest level to ', lev, ' BARS is #',levl
+                data_h=np.median(np.copy(data_26h[levl,:,:,ind]),axis=0)
+                data=np.copy(data_h)
+                #print data
+            elif filen>2600:
+                data_h=np.median(np.copy(data_26h[levl,:,:,ind]),axis=0)
+                data=np.vstack((data,data_h))
+                #print data
+            print data.shape
+            filen+=1
+
+
+        print '-----------------'    #print '            (', data_64.shape, ' )'
+        data_1=np.nanmean(data,axis=0)  #median along time
+        print data_1.shape
     else:
-        print lev,ind
-        data_1=np.median(np.copy(data_26_1[lev,:,:,ind]),axis=0)
+        
+        runname,lon_arr_1,lat_arr_1,oom,surfp,p_BAR,data_26h,data_lo,data_olr=load_data(path,
+                                                                                   runname,
+                                                                                   oom, p0,
+                                                                                   False,False,False,'fort.26')
+        levl=np.argmin(np.abs(p_BAR-lev))
+        data_1=np.median(np.copy(data_26h[levl,:,:,ind]),axis=0)
         
     if plot==0:  #calculate average equator to pole temp diff
         tmin=np.nanmin(data_1)
@@ -620,18 +658,21 @@ def lon_avg(plot,path,data,lon_arr,lat_arr,lev,lo,ln,tn,noy):
         delt=np.abs(tmax-tmin)
     
     
-    plt.figure(figsize=(4,8))
-    plt.gcf().subplots_adjust(bottom=0.08,top=0.97,left=0.17,right=0.97)
+    plt.figure(figsize=(4.5,8))
+    plt.gcf().subplots_adjust(bottom=0.08,top=0.97,left=0.23,right=0.97)
     
 #     ncolor=40
 #     color_list = plt.cm.plasma(np.linspace(0., 1, ncolor))
 #     color1=color_list[int(ncolor/6)]
 
-    color1='slateblue'
+    color1='tomato'#'slateblue'
     
     tn=tn
     ln=ln
     plt.plot(data_1,lat_arr_1,linewidth=8.0,linestyle='-',color=color1)
+    if a_lines==True and lo==True:
+        for t in range(0,nfiles):
+            plt.plot(data[t,:],lat_arr_1,linewidth=1.0,linestyle='-',color=color1,alpha=0.2)
     
     ex_t=2
     if plot==0:
@@ -656,11 +697,14 @@ def lon_avg(plot,path,data,lon_arr,lat_arr,lev,lo,ln,tn,noy):
         plt.xlim(tmin-ex_t,tmax+ex_t)
     
     if plot==0:
-        plt.savefig(path+'/LongAvg_Temps.pdf',transparent=True)
+        if lo==True:
+            plt.savefig(path+runname+'/LongAvg_Temps_loavg.pdf',transparent=True)
+        else:
+            plt.savefig(path+runname+'/LongAvg_Temps.pdf',transparent=True)
     if plot==1:
-        plt.savefig(path+'/LongAvg_UWinds.pdf',transparent=True)
+        plt.savefig(path+runname+'/LongAvg_UWinds.pdf',transparent=True)
     if plot==2:
-        plt.savefig(path+'/LongAvg_VWinds.pdf',transparent=True)
+        plt.savefig(path+runname+'/LongAvg_VWinds.pdf',transparent=True)
 
     plt.show()
     return
@@ -697,23 +741,14 @@ def add_run(path,lo,lev,ind,runnum,curdata,lat_arr_out,runname_out,label_out):
 
     
 
-def lon_avg_comp(path,plot,lev,lo,ln,tn,runnames,ooms,p0s,labels):
+def lon_avg_comp(path,plot,lev,lo,ln,tn,runnames,ooms,p0s,labels,nfiles):
     
     if plot==0: #TEMPERATURE
-        if lo==True:
-            ind=0
-        else:  
-            ind=5
+        ind=5
     if plot==1:
-        if lo==True:
-            ind=1
-        else:
-            ind=3 # uwind
+        ind=3 # uwind
     if plot==2:
-        if lo==True:
-            ind=2
-        else:
-            ind=4 # vwind
+        ind=4 # vwind
                     
 #     curdata=0
 #     lat_arr_out=0
@@ -731,7 +766,7 @@ def lon_avg_comp(path,plot,lev,lo,ln,tn,runnames,ooms,p0s,labels):
         if lo==True:
             print ' DOING LAST ORBIT AVERAGES....'
             filen=2600
-            while filen<2690:
+            while filen<2600+nfiles:
                 #print '----', filen, '----'
                 file_26='fort.'+str(int(filen))
                 runname,lon_arr,lat_arr,oom,surfp,p_BAR,data_26h,data_lo,data_olr=load_data(path,
@@ -742,17 +777,17 @@ def lon_avg_comp(path,plot,lev,lo,ln,tn,runnames,ooms,p0s,labels):
                     levl=np.argmin(np.abs(p_BAR-lev))
                     print 'closest level to ', lev, ' BARS is #',levl
                     data_h=np.median(np.copy(data_26h[levl,:,:,ind]),axis=0)
-                    data=np.copy(data_h)
+                    data_26=np.copy(data_h)
                 elif filen>2600:
                     data_h=np.median(np.copy(data_26h[levl,:,:,ind]),axis=0)
-                    data=np.vstack((data,data_h))
-                print data.shape
+                    data_26=np.vstack((data_26,data_h))
+                print data_26.shape
                 filen+=1
 
 
             print '-----------------'    #print '            (', data_64.shape, ' )'
-            data_26=np.nanmean(data_26,axis=0)  #median along time
-            print data_26.shape
+            data=np.nanmean(data_26,axis=0)  #median along time
+            print data.shape
             
         else:
             runname,lon_arr,lat_arr,oom,surfp,p_BAR,data_26,data_lo,data_olr=load_data(path,

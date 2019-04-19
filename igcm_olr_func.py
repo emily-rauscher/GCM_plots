@@ -3,6 +3,7 @@ import numpy as np
 
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 #%matplotlib inline
 from matplotlib.font_manager import FontProperties
 font0=FontProperties()
@@ -350,7 +351,13 @@ def igcm_olr(path, runname, oom, surfp, radea, createplot, savefig, savenamelw,s
         
         cbar_levs=np.round_(np.linspace(np.nanmin(plt_data)/1.01,np.nanmax(plt_data)*1.01,20),2)
         
-        p=plt.contourf(LON,LAT,plt_data.T,levels=cbar_levs,cmap=plt.cm.Reds,zorder=0)
+        cm_data = np.loadtxt("ScientificColourMaps5/lajolla/lajolla.txt")
+        #cm_data = np.loadtxt("ScientificColourMaps5/bilbao/bilbao.txt")
+        #cm_data=np.flip(cm_data,axis=0)
+        mymap_r = mcolors.LinearSegmentedColormap.from_list('my_colormap', cm_data)
+        #plt.cm.Reds
+        
+        p=plt.contourf(LON,LAT,plt_data.T,levels=cbar_levs,cmap=plt.cm.OrRd,zorder=0)
         c=plt.colorbar(p)
         c.ax.tick_params(labelsize=18)
         
@@ -382,13 +389,19 @@ def igcm_olr(path, runname, oom, surfp, radea, createplot, savefig, savenamelw,s
             plt_lon=np.linspace(-180,180,nlon)
 
             LON,LAT=np.meshgrid(plt_lon,lat_arr)
+            
+            cm_data = np.loadtxt("ScientificColourMaps5/oslo/oslo.txt")
+            #cm_data = np.loadtxt("ScientificColourMaps5/davos/davos.txt")
+            cm_data=np.flip(cm_data,axis=0)
+            mymap_b = mcolors.LinearSegmentedColormap.from_list('my_colormap', cm_data)
+            #plt.cm.Blues
 
             cbar_levs=np.round_(np.linspace(np.nanmin(plt_data)/1.01,np.nanmax(plt_data)*1.01,20),2)
             if np.all(np.diff(cbar_levs) > 0):
-                p=plt.contourf(LON,LAT,plt_data.T,levels=cbar_levs,cmap=plt.cm.Blues,zorder=0)
+                p=plt.contourf(LON,LAT,plt_data.T,levels=cbar_levs,cmap=plt.cm.PuBu,zorder=0)
             else:
                 print '   ...calc levels not working, autogen...'
-                p=plt.contourf(LON,LAT,plt_data.T,cmap=plt.cm.Blues,zorder=0)
+                p=plt.contourf(LON,LAT,plt_data.T,cmap=mymap_b,zorder=0)
             c=plt.colorbar(p)
             c.ax.tick_params(labelsize=18)
 
@@ -419,9 +432,15 @@ def igcm_olr(path, runname, oom, surfp, radea, createplot, savefig, savenamelw,s
             plt_lon=np.linspace(-180,180,nlon)
 
             LON,LAT=np.meshgrid(plt_lon,lat_arr)
+            
+            #cm_data = np.loadtxt("ScientificColourMaps5/vik/vik.txt")
+            cm_data = np.loadtxt("ScientificColourMaps5/broc/broc.txt")
+            #cm_data=np.flip(cm_data,axis=0)
+            mymap_d = mcolors.LinearSegmentedColormap.from_list('my_colormap', cm_data)
+            #plt.cm.BrBG
 
             edge=np.nanmax([np.abs(np.nanmin(plt_data)),np.abs(np.nanmax(plt_data))])
-            cbar_levs=np.round_(np.linspace(-1.01*edge,1.01*edge,21),2)
+            cbar_levs=np.round_(np.linspace(-1.01*edge,1.01*edge,51),2)
             if np.all(np.diff(cbar_levs) > 0):
                 p=plt.contourf(LON,LAT,plt_data.T,levels=cbar_levs,cmap=plt.cm.BrBG,zorder=0)
             else:
