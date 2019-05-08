@@ -120,54 +120,54 @@ def igcm_olr(path, runname, oom, surfp, radea, createplot, savefig, savenamelw,s
             
             data_sw=data_sw[:,:,2]
             print 'SW', data_sw.shape
-        if total==True:
-            with open(path+runname+'/fort.66') as f:
-                first_line=f.readline()
-                nlat,nlon,nlev=first_line.split()
-                nlat,nlon,nlev=int(nlat),int(nlon),int(nlev)
-                print '  '
-                print ' ....reading fort.66 (Total)'
-                print '       nlat=', nlat, 'nlon=', nlon, 'nlev=', nlev
+    if total==True:
+        with open(path+runname+'/fort.66') as f:
+            first_line=f.readline()
+            nlat,nlon,nlev=first_line.split()
+            nlat,nlon,nlev=int(nlat),int(nlon),int(nlev)
+            print '  '
+            print ' ....reading fort.66 (Total)'
+            print '       nlat=', nlat, 'nlon=', nlon, 'nlev=', nlev
 
-            #if nlat!=len(lat_arr) or nlon!=len(lon_arr):
-            #    print 'ERROR: Lat or Lon mis-match, check files'
-            #    exit()
+        #if nlat!=len(lat_arr) or nlon!=len(lon_arr):
+        #    print 'ERROR: Lat or Lon mis-match, check files'
+        #    exit()
 
-            data_66=np.empty([nlat*nlon,3])*0.0
-            l=0
-            with open(path+runname+'/fort.66') as f:
-                for line in f:
-                    if l==0:
-                        l+=1
-                        continue
-                    if l>nlat*nlon:
-                        continue
-                        l+=1
-                    #print line, line.split()
-                    data_66[l-1] = line.split()
+        data_66=np.empty([nlat*nlon,3])*0.0
+        l=0
+        with open(path+runname+'/fort.66') as f:
+            for line in f:
+                if l==0:
                     l+=1
-                print '       END OF FILE: DONE'
-            f.close()
+                    continue
+                if l>nlat*nlon:
+                    continue
+                    l+=1
+                #print line, line.split()
+                data_66[l-1] = line.split()
+                l+=1
+            print '       END OF FILE: DONE'
+        f.close()
 
-            print data_66.shape
+        print data_66.shape
 
-            lon_arr_f=data_66[:,0]
-            lon_arr=np.array([])
-            l=0
-            while l<data_66.shape[0]:
-                lon_arr=np.append(lon_arr,lon_arr_f[l])
-                l+=nlat
+        lon_arr_f=data_66[:,0]
+        lon_arr=np.array([])
+        l=0
+        while l<data_66.shape[0]:
+            lon_arr=np.append(lon_arr,lon_arr_f[l])
+            l+=nlat
 
-            lat_arr=data_66[:nlat,1]
+        lat_arr=data_66[:nlat,1]
 
-            data_tot=np.empty([nlon,nlat,3])
-            for l in range(0,data_66.shape[0]):
-                lon,lat=data_66[l,:2]
-                lon_i,lat_i=np.where(lon_arr==lon)[0][0],np.where(lat_arr==lat)[0][0]
-                data_tot[lon_i,lat_i,:]=data_66[l,:]
-            
-            data_tot=data_tot[:,:,2]
-            print 'tot', data_tot.shape
+        data_tot=np.empty([nlon,nlat,3])
+        for l in range(0,data_66.shape[0]):
+            lon,lat=data_66[l,:2]
+            lon_i,lat_i=np.where(lon_arr==lon)[0][0],np.where(lat_arr==lat)[0][0]
+            data_tot[lon_i,lat_i,:]=data_66[l,:]
+
+        data_tot=data_tot[:,:,2]
+        print 'tot', data_tot.shape
             
     if LastOrb==True:
         print ' DOING LAST ORBIT AVERAGES....'

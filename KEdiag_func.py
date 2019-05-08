@@ -30,7 +30,7 @@ def KEplot(path,runname,oom,press,ndays,lay,savename,minv,maxv):
     nday=ndays#input('Number of days:')
     with open(path+filename+'/'+'fort.52','r') as data_52:
         ke=[] #kinetic energy 
-        cpt=np.zeros((nlay,nday+91)) #kinetic energy and cpt
+        cpt=np.zeros((nlay,nday+91))*np.nan #kinetic energy and cpt
         dayval=[] #column corresponding to the day 
         daycount=0
         laycount=0
@@ -102,7 +102,8 @@ def KEplot(path,runname,oom,press,ndays,lay,savename,minv,maxv):
     c=plt.colorbar(p)
     c.ax.tick_params(labelsize=18)
     plt.grid(color='white',linewidth=0.5,linestyle='--',alpha=0.5, zorder=10)
-    #plt.yscale('log')
+    if oom>0:
+        plt.yscale('log')
     plt.gca().invert_yaxis()
     plt.ylabel('Pressure [bar]', fontsize=20)
     plt.xlabel('Planet Day', fontsize=20)

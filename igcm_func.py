@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import matplotlib.patches as patches
 
+import seaborn as sns
+
 
 from matplotlib.font_manager import FontProperties
 font0=FontProperties()
@@ -65,8 +67,14 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
             
         #cm_data = np.loadtxt("ScientificColourMaps5/acton/acton.txt")
         cm_data = np.loadtxt("ScientificColourMaps5/lajolla/lajolla.txt")
+        #cm_data = np.loadtxt("ScientificColourMaps5/roma/roma.txt")
         cm_data=np.flip(cm_data,axis=0)
+        #mymap = mcolors.LinearSegmentedColormap.from_list('my_colormap', cm_data)
+        #cm_data=mymap(np.linspace(0.0,0.5,128))
         #print(cm_data.shape)
+        
+        #cm_data=plt.cm.magma(np.linspace(0, 1, 128))
+        #cm_data = plt.cm.inferno(np.linspace(0.1, 1.0, 128))
         
         #colors1 = plt.cm.YlGnBu_r(np.linspace(0, 1, 128))
         #colors2 = plt.cm.YlOrBr(np.linspace(0., 1, 128))
@@ -98,10 +106,12 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
             ind=5  #(want contours to be temp)
         #colors1 = plt.cm.YlGnBu_r(np.linspace(0, 1, 128))
         #colors2 = plt.cm.YlOrBr(np.linspace(0., 1, 128))
-        cm_data = np.loadtxt("ScientificColourMaps5/roma/roma.txt")
-        cm_data=np.flip(cm_data,axis=0)
+        cm_data = np.loadtxt("ScientificColourMaps5/acton/acton.txt")
+        #cm_data = np.loadtxt("ScientificColourMaps5/lajolla/lajolla.txt")
+        #cm_data=np.flip(cm_data,axis=0)
         
-        greys=plt.cm.gray_r(np.linspace(0., 0.75, 128))
+        greys=plt.cm.gray_r(np.linspace(0.00, 0.40, 128))
+        #greys=plt.cm.gist_yarg(np.linspace(0.0, 1.0, 128))
         mygreys=mcolors.LinearSegmentedColormap.from_list('my_colormap', greys)
         if lo==True:
             data_26_u=np.copy(data[lev,:,:,1])
@@ -113,7 +123,10 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         #data_26_W=(np.sqrt(np.square(data_26_u)+np.square(data_26_v)))
     if plot==4: # plotting OLR, different input file used!
         # LO CAN NOT BE TRUE HERE
-        heat=plt.cm.hot(np.linspace(0.05,0.95,128))
+        #cm_data = np.loadtxt("ScientificColourMaps5/lajolla/lajolla.txt")
+        #cm_data=np.flip(cm_data,axis=0)
+        #heat=plt.cm.hot(np.linspace(0.05,0.95,128))
+        cm_data = np.loadtxt("ScientificColourMaps5/lajolla/lajolla.txt")
         #colors2=np.array([])
                               
     if plot<4:
@@ -124,13 +137,16 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
     #######################################
 
     # combine them and build a new colormap
-    if plot<4:
+    if plot<=4:
         #colors = np.vstack((colors1, colors2))
         colors=cm_data
         mymap = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors)
         #mymap = mymap_r
-    if plot==4:
-        mymap = mcolors.LinearSegmentedColormap.from_list('my_colormap', heat)
+#     if plot==4:
+#         #colors=cm_data
+#         #mymap = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors)
+
+#         mymap = mcolors.LinearSegmentedColormap.from_list('my_colormap', heat)
 
     #########################################
     # set up lat and lon units
@@ -142,14 +158,14 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         lon_arr=lon_arr
     
     freezeT=273.15
-    if plot==0 or plot==3: #TEMPERATURE, convert units    
+    if plot==0: #TEMPERATURE, convert units    
         if units_t==1:
             data_26-=273.15
             freezeT=0.0
         if units_t==2:
             data_26=(9./5.)*(data_26-273.15)+32.
             freezeT=32.0
-    if plot==1 or plot==2: #WINDS, convert units
+    if plot==1 or plot==2 or plot==3: #WINDS, convert units
         if units_w==1:
             data_26/=1000.  #m/s to km/s
         if units_w==2:
@@ -257,6 +273,8 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
                     CENTER_V[i-nlon/2,:]=data_26_v[i,:]
             plt_U0=CENTER_U
             plt_V0=CENTER_V
+            CENTER=(np.sqrt(np.square(plt_U0)+np.square(plt_V0)))
+            plt_data=CENTER
        
         if loncenter!=0:
             SHIFT=np.zeros([nlon,nlat])
@@ -282,7 +300,16 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         
         if plot==3:
             #a=0.3
-            a=0.7 #add a transparency for temps behind streamplot overlay
+            a=0.8 #add a transparency for temps behind streamplot overlay
+            minV=np.int((np.nanmin(plt_data)))*1.0
+            maxV=np.ceil(np.nanmax(plt_data))
+            if cbarL!=0 and cbarM!=0:
+                minV=np.int((np.nanmin(cbarL)))*1.0
+                maxV=np.ceil(np.nanmax(cbarM))
+            if ncolors==0:
+                cbar_levs=np.linspace(minV-ex,maxV+ex,(maxV-minV+2*ex)+1)
+            else:
+                cbar_levs=np.linspace(minV-ex,maxV+ex,ncolors*((maxV-minV+2*ex))+1.0)
         else:
             a=1.0
         p=plt.contourf(LON,LAT,plt_data.T,levels=cbar_levs,cmap=mymap,zorder=0,alpha=a)
@@ -296,9 +323,10 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
         if plot==3:
             data_26_W=(np.sqrt(np.square(plt_U0)+np.square(plt_V0)))
             lw=5.*data_26_W/np.nanmax(data_26_W)
-            plt.streamplot(LON,LAT,plt_U0.T,plt_V0.T,density=vfrac,color='dimgrey',linewidth=lw.T,zorder=10)
+            plt.streamplot(LON,LAT,plt_U0.T,plt_V0.T,density=vfrac,color=plt_data.T,cmap=mygreys,linewidth=lw.T,zorder=10)
+                           #color='dimgrey
         
-        if plot==0 or plot==3:
+        if plot==0:
             if units_t==0:
                 plt.figtext(0.84,0.5,'Temperature [K]',fontsize=20,rotation='vertical',ha='center',va='center')
             if units_t==1:
@@ -319,6 +347,14 @@ def igcm_Plot(plot,lons,lats,press,data,lev,latcenter,loncenter,ex,units_a,units
                 plt.figtext(0.84,0.5,'N-S Wind [km/s]',fontsize=20,rotation='vertical',ha='center',va='center')
             if units_w==2:
                 plt.figtext(0.84,0.5,'N-S Wind [mph]',fontsize=20,rotation='vertical',ha='center',va='center')
+        if plot==3:
+            if units_w==0:
+                plt.figtext(0.84,0.5,'Absolute Wind Speed [m/s]',fontsize=20,rotation='vertical',ha='center',va='center')
+            if units_w==1:
+                plt.figtext(0.84,0.5,'Absolute Wind Speed [km/s]',fontsize=20,rotation='vertical',ha='center',va='center')
+            if units_w==2:
+                plt.figtext(0.84,0.5,'Absolute Wind Speed [mph]',fontsize=20,rotation='vertical',ha='center',va='center')
+            
         if plot==4:
             plt.figtext(0.84,0.5,'Outgoing Radiation [W/m$^2$]',fontsize=20,rotation='vertical',ha='center',va='center')
         

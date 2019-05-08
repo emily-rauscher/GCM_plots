@@ -50,14 +50,14 @@ def SurfPress(path, runname, oom, surfp, createplot, savefig, savename):
     
     print data50.shape
     
-    lon_arr_f=data_50[:,0]
+    lon_arr_f=data50[:,0]
     lon_arr=np.array([])
     l=0
-    while l<data_50.shape[0]:
+    while l<data50.shape[0]:
         lon_arr=np.append(lon_arr,lon_arr_f[l])
         l+=nlat
 
-    lat_arr=data_50[:nlat,1]
+    lat_arr=data50[:nlat,1]
             
     data_50=np.empty([nlon,nlat,3])
     for l in range(0,data50.shape[0]):
@@ -85,7 +85,10 @@ def SurfPress(path, runname, oom, surfp, createplot, savefig, savename):
         
         cbar_levs=np.round_(np.linspace(np.nanmin(plt_data)/1.01,np.nanmax(plt_data)*1.01,20),2)
         
-        p=plt.contourf(LON,LAT,plt_data.T,levels=cbar_levs,cmap=plt.cm.Purples,zorder=0)
+        if np.all(np.diff(cbar_levs) > 0):
+            p=plt.contourf(LON,LAT,plt_data.T,levels=cbar_levs,cmap=plt.cm.Purples,zorder=0)
+        else:
+            p=plt.contourf(LON,LAT,plt_data.T,cmap=plt.cm.Purples,zorder=0)
         c=plt.colorbar(p)
         c.ax.tick_params(labelsize=18)
         
