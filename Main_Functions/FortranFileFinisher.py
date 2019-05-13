@@ -83,25 +83,26 @@ def fort26(path,runname,oom, surfp,ver,savet,fortfile,):
     ############################################################
     nlev,nlon,nlat,nparam=data_26.shape
     
-    print ' '
-    print '--------------------------'
-    print '|    ARRAY DIMENSIONS    |'
-    print '--------------------------'
-    print 'N_levels: ', nlev
-    print 'N_lons:   ', nlon
-    print 'N_lats:   ', nlat
-    print 'N_params: ', nparam
+    if ver==True:
+        print ' '
+        print '--------------------------'
+        print '|    ARRAY DIMENSIONS    |'
+        print '--------------------------'
+        print 'N_levels: ', nlev
+        print 'N_lons:   ', nlon
+        print 'N_lats:   ', nlat
+        print 'N_params: ', nparam
     
-    print ' '
-    print '--------------------------'
-    print '|   Important Indexing!  |'
-    print '--------------------------'
-    print 'Longitudes: 0'
-    print 'Latitudes : 1'
-    print 'Levels    : 2'
-    print 'U Winds   : 3'
-    print 'V Winds   : 4'
-    print 'Temps     : 5'
+        print ' '
+        print '--------------------------'
+        print '|   Important Indexing!  |'
+        print '--------------------------'
+        print 'Longitudes: 0'
+        print 'Latitudes : 1'
+        print 'Levels    : 2'
+        print 'U Winds   : 3'
+        print 'V Winds   : 4'
+        print 'Temps     : 5'
     # nparam index: 
     #      0=lons
     #      1=lats
@@ -237,7 +238,7 @@ def fort64(path,runname,radea,ver,savet,fortfile):
 
     if savet==True:
         pickle.dump(data_lw,open(path+runname+'/fort64.txt','wb'))
-        pickle.dump(total_lw,open(path+runname+'/LW_total.txt', 'wb'))
+        pickle.dump(total_lw,open(path+runname+'/LWF_total.txt', 'wb'))
     
     return runname,lon_arr,lat_arr,data_lw,total_lw
 
@@ -303,7 +304,7 @@ def fort65(path,runname,radea,ver,savet,fortfile):
 
     if savet==True:
         pickle.dump(data_sw,open(path+runname+'/fort65.txt','wb'))
-        pickle.dump(total_sw,open(path+runname+'/SW_total.txt', 'wb'))
+        pickle.dump(total_sw,open(path+runname+'/SWF_total.txt', 'wb'))
    
     
     return runname,lon_arr,lat_arr,data_sw,total_sw
@@ -368,7 +369,7 @@ def fort66(path,runname,radea,ver,savet,fortfile):
 
     if savet==True:
         pickle.dump(data_tot,open(path+runname+'/fort66.txt','wb'))
-        pickle.dump(total_tt,open(path+runname+'/TT_total.txt', 'wb'))
+        pickle.dump(total_tt,open(path+runname+'/TTF_total.txt', 'wb'))
     
     return runname,lon_arr,lat_arr,data_tot,total_tt
 
